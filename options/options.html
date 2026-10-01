@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Video Speed Control – Einstellungen</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <main>
+    <h1>Video Speed Control</h1>
+
+    <section>
+      <h2>Hotkeys</h2>
+      <p>Lege fest, welche Taste welche Aktion auslöst. Erlaubt ist genau ein Zeichen pro Feld (Buchstabe, Ziffer oder Sonderzeichen wie <code>,</code> oder <code>.</code>). Steuerungs-, Alt- und Cmd-Kombinationen lösen nie aus; bei Buchstaben wird zusätzlich Shift ignoriert.</p>
+      <table>
+        <tr><th>Aktion</th><th>Taste</th></tr>
+        <tr><td>Playback speed verringern</td><td><input id="decrease" maxlength="1" autocomplete="off"></td></tr>
+        <tr><td>Playback speed erhöhen</td><td><input id="increase" maxlength="1" autocomplete="off"></td></tr>
+        <tr><td>Zwischen 1.00× und gespeicherter Geschwindigkeit umschalten</td><td><input id="toggle" maxlength="1" autocomplete="off"></td></tr>
+      </table>
+      <p id="error" class="error" hidden></p>
+    </section>
+
+    <section>
+      <h2>Geschwindigkeit</h2>
+      <p>Mit dem Umschalter (Standard: <code>R</code>) wechselt das Video zwischen 1.00× und dieser Geschwindigkeit. Die Hotkeys zum Erhöhen/Verringern (Standard: <code>D</code>/<code>S</code>) ändern sie in 0.1er-Schritten und speichern automatisch.</p>
+      <label>Gespeicherte Geschwindigkeit: <input id="speed" type="number" min="0.25" max="10" step="0.05" width="6"> ×</label>
+    </section>
+
+    <section>
+      <h2>Weiteres Verhalten</h2>
+      <ul>
+        <li>Die Geschwindigkeit wird pro Geräte-Sync gespeichert und bei jedem Video automatisch angewendet.</li>
+        <li>Bekannte Redirect-Seiten externer Links (Google <code>/url?q=</code>, Bing <code>/ck/a</code>, Facebook <code>l.php</code>, Steam <code>linkfilter</code>, DuckDuckGo, Reddit, X/Twitter, <code>href.li</code>, Instagram) werden automatisch übersprungen.</li>
+        <li>
+          <label class="check">
+            <input type="checkbox" id="cinema">
+            <span><strong>Kino-Modus auf YouTube immer aktiv:</strong> Auf Watch- und Live-Seiten wird der Theatermodus automatisch eingeschalten – der Player wird breit, aber nicht vollbild. Setzt YouTube den Modus zurück oder wird er manuell ausgeschaltet, schaltet die Erweiterung ihn wieder ein.</span>
+          </label>
+        </li>
+      </ul>
+    </section>
+
+    <div class="buttons">
+      <button id="save" class="primary">Speichern</button>
+      <button id="reset">Standard wiederherstellen</button>
+    </div>
+    <p id="status" class="status"></p>
+  </main>
+
+  <script src="options.js"></script>
+</body>
+</html>

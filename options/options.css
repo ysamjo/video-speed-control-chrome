@@ -1,0 +1,72 @@
+body {
+  font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #1f2937;
+  background: #f8fafc;
+  margin: 0;
+}
+
+main {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+}
+
+h1 { font-size: 22px; margin: 0 0 24px; color: #0f766e; }
+h2 { font-size: 16px; margin: 24px 0 8px; }
+
+section p { margin: 8px 0 16px; color: #4b5563; }
+
+table { border-collapse: collapse; margin: 8px 0 4px; }
+th, td { text-align: left; padding: 6px 16px 6px 0; }
+th { font-weight: 600; }
+
+input {
+  width: 3em;
+  padding: 6px 8px;
+  font-size: 15px;
+  text-align: center;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+}
+input:focus { outline: 2px solid #0f766e; border-color: transparent; }
+
+.buttons { display: flex; gap: 12px; margin-top: 24px; }
+button {
+  padding: 8px 16px;
+  font-size: 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: white;
+  cursor: pointer;
+}
+button:hover { background: #f3f4f6; }
+button.primary {
+  background: linear-gradient(to right, rgb(7 128 113), rgb(111 155 35));
+  border-color: transparent;
+  color: white;
+  font-weight: 600;
+}
+button.primary:hover { filter: brightness(1.05); }
+
+.error { color: #b91c1c; font-weight: 600; }
+.status { color: #0f766e; font-weight: 600; min-height: 1.5em; }
+
+/* Checklisten-Einträge: Text läuft neben dem Feld, nicht daneben */
+.check {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  cursor: pointer;
+  color: #4b5563;
+}
+.check input[type='checkbox'] {
+  width: auto;
+  margin-top: 3px;
+  accent-color: #0f766e;
+}
+code {
+  background: #eef2f7;
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-size: 13px;
+}
