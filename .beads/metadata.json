@@ -1,0 +1,7 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "embedded",
+  "dolt_database": "video_speed_control_chrome",
+  "project_id": "9d6b5a2e-fdd2-4e3f-819e-c34a1cb618e2"
+}
