@@ -56,7 +56,7 @@ function load({ initial = 1.8, withVideo = true, storedSpeed = 1.8, deferSetting
   theaterButton = true, applyTheaterOnClick = true } = {}) {
   const winListeners = {}
   const created = [], saved = [], storageListeners = [], pendingGets = [], observers = []
-  const storage = { playbackSpeed: storedSpeed, cinemaMode: cinema }
+  const storage = { playbackSpeed: storedSpeed, cinemaMode: cinema, channelSpeeds: [{ pattern: 'sport', speed: 1.1 }] }
   let fakeNow = 1000, theaterClicks = 0
   const video = makeVideo(initial)
 

@@ -63,8 +63,10 @@ const toast = (() => {
 const speedControl = (() => {
   const SPEED_KEY = 'playbackSpeed'
   const HOTKEYS_KEY = 'hotkeys'
+  const CHANNEL_RULES_KEY = 'channelSpeeds'
   const DEFAULT_HOTKEYS = { decrease: 's', increase: 'd', toggle: 'r' }
   const MIN = 0.25, MAX = 10, STEP = 0.1, TOGGLE_LOW = 1
+  const DEFAULT_CHANNEL_RULES = [{ pattern: 'sport', speed: 1.1 }]
   const ENFORCE_MS = 1500   // begrenzter Schutz nach Hotkey, Skip und Wiederaufnahme
   const MEDIA_EVENTS = ['play', 'playing', 'seeking', 'seeked', 'loadedmetadata']
   const MAX_RESTORES = 10   // Sicherheitsnetz gegen Endlosgefechte mit dem Player
@@ -76,6 +78,7 @@ const speedControl = (() => {
 
   let speed = 1.8
   let hotkeys = { ...DEFAULT_HOTKEYS }
+  let channelRules = []
   let settingsLoaded = false
   let video
   // Auswahl und Schutz gehören zum jeweiligen Video, nicht zum zuletzt aktiven Player.
@@ -85,6 +88,20 @@ const speedControl = (() => {
 
   const clamp = s => Math.round(Math.min(MAX, Math.max(MIN, s)) * 100) / 100
   const stored = () => speed
+  const normalizeRules = (raw) => {
+    if (!Array.isArray(raw)) return []
+    return raw.map(r => ({
+      pattern: String(r?.pattern ?? '').trim().toLowerCase(),
+      speed: clamp(Number(r?.speed) || 1),
+    })).filter(r => r.pattern)
+  }
+  const speedForContext = () => {
+    const href = (typeof location !== 'undefined' ? (location.href || '') : '').toLowerCase()
+    for (const rule of channelRules) {
+      if (href.includes(rule.pattern)) return rule.speed
+    }
+    return speed
+  }
 
   const saveSpeed = (v) => {
     speed = v
@@ -93,10 +110,11 @@ const speedControl = (() => {
 
   const loadSettings = () => {
     try {
-      chrome.storage.sync.get({ [SPEED_KEY]: 1.8, [HOTKEYS_KEY]: DEFAULT_HOTKEYS }, (res) => {
+      chrome.storage.sync.get({ [SPEED_KEY]: 1.8, [HOTKEYS_KEY]: DEFAULT_HOTKEYS, [CHANNEL_RULES_KEY]: DEFAULT_CHANNEL_RULES }, (res) => {
         if (chrome.runtime.lastError) return log('Fehler beim Laden der Einstellungen', chrome.runtime.lastError)
         speed = clamp(Number(res[SPEED_KEY]) || 1)
         hotkeys = { ...DEFAULT_HOTKEYS, ...res[HOTKEYS_KEY] }
+        channelRules = normalizeRules(res[CHANNEL_RULES_KEY])
         settingsLoaded = true
         scheduleInitialApply()
       })
@@ -105,6 +123,7 @@ const speedControl = (() => {
         if (area !== 'sync') return
         if (changes[SPEED_KEY]?.newValue != null) speed = clamp(Number(changes[SPEED_KEY].newValue) || 1)
         if (changes[HOTKEYS_KEY]?.newValue) hotkeys = { ...DEFAULT_HOTKEYS, ...changes[HOTKEYS_KEY].newValue }
+        if (changes[CHANNEL_RULES_KEY]?.newValue != null) channelRules = normalizeRules(changes[CHANNEL_RULES_KEY].newValue)
       })
     } catch (e) {
       log('Kein Zugriff auf chrome.storage – nutze Defaults', e)
@@ -223,9 +242,9 @@ const speedControl = (() => {
     if (type === 'play' || type === 'playing') video = target
     const state = videoStates.get(target)
     if (!state) {
-      // Neues Video: gespeicherte Rate anwenden, aber nichts zurückschreiben und
+      // Neues Video: passende Rate (Kanal/URL-Regel oder global) anwenden, aber nichts zurückschreiben und
       // Schutz aktivieren (Player setzen die Rate gern sofort wieder zurück).
-      apply(stored(), target, false, false, true)
+      apply(speedForContext(), target, false, false, true)
       return
     }
     // Bekanntes Video: die EIGENE Auswahl behalten – z. B. das temporäre 1.00× nach „r".
@@ -243,7 +262,7 @@ const speedControl = (() => {
   const applyToInitialVideo = () => {
     video = findVideo()
     // Initial nur anwenden, nichts zurückschreiben (sonst onChanged-Lärm in allen Tabs).
-    if (video) apply(stored(), video, false, false, true)
+    if (video) apply(speedForContext(), video, false, false, true)
   }
 
   const scheduleInitialApply = () => {
