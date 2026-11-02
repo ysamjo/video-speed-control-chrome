@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Video Speed Control with Keyboard",
-  "version": "2026.11.2",
-  "description": "Videotempo per Hotkey steuern, feste Geschwindigkeiten pro YouTube-Kanal verwalten und YouTube Kids auf 1,0× halten.",
+  "version": "2026.11.3",
+  "description": "Videotempo pro Kanal und YouTube Kids vorgeben. Manuell für ein Video ändern; beim nächsten Video gilt wieder die Vorgabe.",
   "author": "Vitus Schuhwerk",
   "license": "MIT",
   "permissions": ["storage"],

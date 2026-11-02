@@ -1,5 +1,5 @@
 // Führt alle Testdateien aus. Aufruf: npm test  (oder: node test/run.js)
-const files = ['rules', 'channel-speed', 'hotkey-guard', 'toggle', 'toggle-state', 'step-base', 'seek', 'cinema']
+const files = ['rules', 'channel-speed', 'manual-override', 'hotkey-guard', 'toggle', 'toggle-state', 'step-base', 'seek', 'cinema']
 
 ;(async () => {
   let failed = 0

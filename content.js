@@ -67,14 +67,14 @@ const speedControl = (() => {
   const KIDS_KEY = 'youtubeKidsNormalSpeed'
   const DEFAULT_HOTKEYS = { decrease: 's', increase: 'd', toggle: 'r' }
   const MIN = 0.25, MAX = 10, STEP = 0.1, TOGGLE_LOW = 1
-  const { DEFAULT_CHANNEL_RULES, normalizeRules, readChannel, resolve, mediaKey, isYouTube, isKids } = VSC_RULES
+  const { DEFAULT_CHANNEL_RULES, normalizeRules, readChannel, resolve, mediaKey, isYouTube, isKids, channelKey } = VSC_RULES
   const ENFORCE_MS = 1500   // begrenzter Schutz nach Hotkey, Skip und Wiederaufnahme
   const MEDIA_EVENTS = ['play', 'playing', 'seeking', 'seeked', 'loadedmetadata']
   const MAX_RESTORES = 10   // Sicherheitsnetz gegen Endlosgefechte mit dem Player
   const ACTIONS = {
     decrease: { label: 'Langsamer', next: s => s - STEP },
     increase: { label: 'Schneller', next: s => s + STEP },
-    toggle:   { label: 'Umschalten 1.00× / gespeichert' },
+    toggle:   { label: 'Umschalten 1.00× / Auswahl' },
   }
 
   let speed = 1.8
@@ -85,22 +85,49 @@ const speedControl = (() => {
   let contextTimer
   let settingsLoaded = false
   let video
+  const channelMetadata = new Map()
   // Auswahl und Schutz gehören zum jeweiligen Video, nicht zum zuletzt aktiven Player.
   // `speed` bleibt die gespeicherte Präferenz; z. B. R auf 1.00× gilt nur für dieses Video.
   const videoStates = new WeakMap()
   const handledMediaEvents = new WeakSet() // Dokument-Capture und Zielphase nur einmal behandeln
 
   const clamp = s => Math.round(Math.min(MAX, Math.max(MIN, s)) * 100) / 100
-  const stored = () => speed
+  let manualIntent
   const kidsContext = Array.from(location.ancestorOrigins || []).some(origin => {
     try { return isKids(new URL(origin).hostname) } catch { return false }
   })
-  const context = () => resolve({ location, channels: navigating ? [] : readChannel(document, location), rules: channelRules, speed, kids, kidsContext })
-
-  const saveSpeed = (v) => {
-    speed = v
-    try { chrome.storage?.sync.set({ [SPEED_KEY]: v }) } catch (e) { log('Speichern fehlgeschlagen', e) }
+  const channelsForContext = () => {
+    const channels = readChannel(document, location)
+    if (channels.length || !isYouTube(location.hostname) || location.pathname !== '/watch') return channels
+    const id = new URL(location.href).searchParams.get('v')
+    const watch = document.querySelector('ytd-watch-flexy')
+    // Gemeinsame Uploads zeigen statt Owner-Links einen Dialogknopf. Keine alten
+    // Head-Metadaten verwenden: diese bleiben nach SPA-Wechseln oft unverändert.
+    if (!id || watch?.getAttribute?.('video-id') !== id || !document.querySelector('ytd-watch-flexy #owner') || typeof fetch !== 'function') return []
+    if (channelMetadata.has(id)) return channelMetadata.get(id)
+    channelMetadata.set(id, []) // parallele Aufrufe derselben Anfrage verhindern
+    if (channelMetadata.size > 20) channelMetadata.delete(channelMetadata.keys().next().value)
+    const key = mediaKey(location)
+    ;(async () => {
+      try {
+        const url = `https://www.youtube.com/oembed?url=${encodeURIComponent(`https://www.youtube.com/watch?v=${id}`)}&format=json`
+        const response = await fetch(url, { credentials: 'omit', signal: AbortSignal.timeout(5000) })
+        if (!response.ok) return
+        const data = await response.json()
+        const owner = channelKey(data.author_url)
+        if (!owner || !channelMetadata.has(id)) return
+        channelMetadata.set(id, [owner, String(data.author_name || '').trim().toLowerCase()].filter(Boolean))
+        if (mediaKey(location) === key) refreshContext()
+      } catch (e) { log('Kanal-Metadaten nicht verfügbar', e.message) }
+    })()
+    return []
   }
+  const context = () => resolve({ location, channels: navigating ? [] : channelsForContext(), rules: channelRules, speed, kids, kidsContext })
+
+  // YouTube verwendet dieselbe Blob-Quelle auch beim Spulen/Qualitätswechsel.
+  // Dort identifiziert die Video-URL den Inhalt; sonst zusätzlich die Medienquelle.
+  const sourceKey = v => `${mediaKey(location)}${isYouTube(location.hostname) && /^\/(watch|shorts\/|live\/)/.test(location.pathname)
+    ? '' : `|${v.currentSrc || v.src || ''}`}`
 
   const loadSettings = () => {
     try {
@@ -145,15 +172,26 @@ const speedControl = (() => {
   const restore = ({ currentTarget: v }) => {
     syncContext(v)
     const state = videoStates.get(v)
-    if (!state || (!state.locked && Date.now() > state.enforceUntil)) return
+    if (!state) return
     if (v.playbackRate === state.rate && v.defaultPlaybackRate === state.rate) return
-    if (state.locked && Date.now() > state.enforceUntil) {
+    const youtube = isYouTube(location.hostname)
+    if (v.playbackRate !== state.rate && VSC_RULES.validSpeed(v.playbackRate) !== null
+      && ((!youtube && Date.now() > state.enforceUntil) || (manualIntent?.video === v && Date.now() <= manualIntent.until))) {
+      // Native Player-Auswahl übernehmen, ohne Kanal- oder Standardtempo zu speichern.
+      state.rate = state.stepRate = clamp(v.playbackRate)
+      state.manual = true
+      state.enforceUntil = 0
+      manualIntent = null
+      writeRate(v, state.rate)
+      return
+    }
+    if (youtube && Date.now() > state.enforceUntil) {
       state.enforceUntil = Date.now() + ENFORCE_MS
       state.restores = 0
     }
+    if (Date.now() > state.enforceUntil) return
     if (state.restores >= MAX_RESTORES) {
-      // Feste Regeln dauerhaft halten, aber konkurrierende Player nicht heißlaufen lassen.
-      if (state.locked && !state.retry) state.retry = setTimeout(() => {
+      if (youtube && !state.retry) state.retry = setTimeout(() => {
         state.retry = null
         if (v.isConnected !== false) restore({ currentTarget: v })
       }, ENFORCE_MS + 1)
@@ -165,12 +203,12 @@ const speedControl = (() => {
   }
 
   /** Auswahl anwenden; automatische Medien-Events dürfen sie nicht neu speichern. */
-  const apply = (value, v, userAction = false, save = true, protect = userAction) => {
+  const apply = (value, v, { userAction = false, remember = userAction, reset = false } = {}) => {
     if (!v) return log('No video element found')
     value = clamp(value)
     let state = videoStates.get(v)
     if (!state) {
-      state = { rate: value, enforceUntil: 0, restores: 0 }
+      state = { rate: value, stepRate: value, manual: false, enforceUntil: 0, restores: 0 }
       videoStates.set(v, state)
       v.addEventListener('ratechange', restore)
       // Medien-Events sind nicht composed: direkt am Video auch im Shadow DOM empfangen.
@@ -178,37 +216,32 @@ const speedControl = (() => {
     }
     state.rate = value
     const policy = context()
-    state.contextKey = mediaKey(location)
+    state.contextKey = sourceKey(v)
     state.policyKey = policy.key
-    state.locked = policy.locked
-    if (save) saveSpeed(value)
-    if (protect) {
-      state.enforceUntil = Date.now() + ENFORCE_MS
-      state.restores = 0
-    }
+    state.policyRate = policy.rate
+    if (reset || remember) state.stepRate = value
+    if (reset && manualIntent?.video === v) manualIntent = null
+    state.manual = reset ? false : state.manual || userAction
+    state.enforceUntil = Date.now() + ENFORCE_MS
+    state.restores = 0
     if (userAction || v.playbackRate !== value) toast.show(value.toFixed(2))
     writeRate(v, value)
   }
 
   const step = (action, v) => {
     const target = v ?? video ?? findVideo()
-    const policy = context()
-    if (policy.locked) return apply(policy.rate, target, true, false, true)
+    syncContext(target)
+    const selected = videoStates.get(target)?.stepRate ?? context().rate
     if (action === 'toggle') {
-      // Immer auf 1.00× umschalten – und aus 1.00× heraus zurück auf die gespeicherte Rate.
-      // Die Richtung wird bewusst gegen 1.00× geprüft, NICHT gegen `stored()`: sonst schaltet
-      // „r" bei jeder Rate, die nicht exakt die gespeicherte ist (Player-Eigenwert, verstellte
-      // Einstellung), auf `stored()` statt auf 1.00× – die Taste wirkt dann, als täte sie nichts.
+      // Immer auf 1.00× umschalten – und daraus zurück zur letzten Auswahl dieses Videos.
+      // Die Richtung wird bewusst gegen 1.00× geprüft, nicht gegen das gewählte Tempo.
       const rate = target?.playbackRate ?? TOGGLE_LOW
-      const want = Math.abs(rate - TOGGLE_LOW) < 0.01 ? stored() : TOGGLE_LOW
-      log(`Toggle: ${rate} → ${want} (gespeichert ${stored()})`)
-      return apply(want, target, true, false)
+      const resume = Math.abs(selected - TOGGLE_LOW) < 0.01 ? context().rate : selected
+      const want = Math.abs(rate - TOGGLE_LOW) < 0.01 ? resume : TOGGLE_LOW
+      return apply(want, target, { userAction: true, remember: false })
     }
-    // Schrittweite immer ab der GESPEICHERTEN Geschwindigkeit, nicht ab der gerade laufenden:
-    // die laufende Rate kann der Player jederzeit selbst gesetzt haben (Reset, neues Video,
-    // laufender Toggle) – dann würde ein Schritt bei 1.00× landen statt bei 1.90× und die
-    // gespeicherte Geschwindigkeit mit dem Fremdwert überschreiben.
-    apply(ACTIONS[action].next(stored()), target, true)
+    // Nach R bleibt die letzte Auswahl die Schrittbasis; Kanalvorgaben starten bei ihrem Tempo.
+    apply(ACTIONS[action].next(selected), target, { userAction: true })
   }
 
   /**
@@ -247,6 +280,31 @@ const speedControl = (() => {
     if (e.type === 'keydown') step(action)
   }
 
+  const onPlayerControl = e => {
+    if (!e.isTrusted) return
+    const path = e.composedPath?.() ?? [e.target]
+    const control = path.some(el => el?.matches?.('[role="menuitemradio"], [role="slider"], input[type="range"], .html5-video-player') || el?.localName === 'video')
+    const speedControl = path.some(el => {
+      if (el?.matches?.('.ytp-speedslider, .ytp-variable-speed-panel-button')) return true
+      const label = `${el?.getAttribute?.('aria-label') || ''} ${el?.title || ''}`
+      if (/playback\s*(?:speed|rate)|geschwindigkeit|\btempo\b|\bspeed\b/i.test(label)) return true
+      return el?.getAttribute?.('role') === 'menuitemradio'
+        && /^(?:normal|standard|\d+(?:[.,]\d+)?\s*[x×]?)$/i.test((el.textContent || '').trim())
+    })
+    const speedShortcut = e.type === 'keydown' && ['<', '>'].includes(e.key)
+    if (!control && !speedControl && !speedShortcut) return
+    const target = path.find(el => el?.localName === 'video') ?? video ?? findVideo()
+    if (!target) return
+    if (speedControl || speedShortcut) manualIntent = { video: target, until: Date.now() + ENFORCE_MS }
+    else {
+      // Zeit-/Lautstärkeregler und Play-Klicks sind keine Tempowahl. Den Schutz bereits
+      // vor dem Medienevent erneuern, weil manche Player zuerst die Rate zurücksetzen.
+      manualIntent = null
+      const state = videoStates.get(target)
+      if (state) { state.enforceUntil = Date.now() + ENFORCE_MS; state.restores = 0 }
+    }
+  }
+
   const onMedia = (e) => {
     const { type, target } = e
     if (target?.localName !== 'video') return
@@ -261,7 +319,7 @@ const speedControl = (() => {
     if (!state) {
       // Neues Video: passende Rate (Kanal/URL-Regel oder global) anwenden, aber nichts zurückschreiben und
       // Schutz aktivieren (Player setzen die Rate gern sofort wieder zurück).
-      apply(context().rate, target, false, false, true)
+      apply(context().rate, target, { reset: true })
       return
     }
     // Bekanntes Video: die EIGENE Auswahl behalten – z. B. das temporäre 1.00× nach „r".
@@ -280,9 +338,16 @@ const speedControl = (() => {
     if (!v || !settingsLoaded) return
     const state = videoStates.get(v)
     const policy = context()
-    if (!state || state.contextKey !== mediaKey(location) || state.policyKey !== policy.key
-      || (policy.locked && state.rate !== policy.rate) || force) {
-      apply(policy.rate, v, false, false, true)
+    const sameVideo = state?.contextKey === sourceKey(v)
+    const policyChanged = state?.policyKey !== policy.key || state?.policyRate !== policy.rate
+    if (sameVideo && state.manual && (!force || !policyChanged)) {
+      // Ein spät gerenderter Owner darf die manuelle Auswahl dieses Videos nicht kassieren.
+      state.policyKey = policy.key
+      state.policyRate = policy.rate
+      return
+    }
+    if (!state || !sameVideo || policyChanged) {
+      apply(policy.rate, v, { reset: true })
     }
   }
 
@@ -331,6 +396,7 @@ const speedControl = (() => {
   const init = () => {
     // window + capture + document-start: läuft vor den eigenen Handlern der Seite.
     on(window, ['keydown', 'keypress', 'keyup'], onKey, true)
+    on(window, ['pointerdown', 'click', 'input', 'change', 'keydown'], onPlayerControl, true)
     on(document, MEDIA_EVENTS, onMedia, true)
 
     loadSettings()

@@ -18,7 +18,7 @@ async function run() {
   const rules = normalizeRules([{ type: 'url', pattern: 'youtube', speed: 2 }, { type: 'channel', pattern: '@sportstudio', speed: 1 }])
   const location = { hostname: 'www.youtube.com', pathname: '/watch', href: 'https://www.youtube.com/watch?v=one' }
   s.check('Kanalregel hat Vorrang vor URL-Regel', resolve({ location, rules, channels: ['@sportstudio'] }).rate, 1)
-  s.check('Ähnlicher Kanal trifft nicht', resolve({ location, rules: rules.slice(1), channels: ['@sportstudioextra'] }).locked, false)
+  s.check('Ähnlicher Kanal trifft nicht', resolve({ location, rules: rules.slice(1), channels: ['@sportstudioextra'] }).key, 'global')
   const doc = { querySelector: () => null, querySelectorAll: () => [] }
   s.check('Empfehlungen und Videotitel werden nicht als Owner ausgewertet', readChannel(doc, location).length, 0)
   return s.report()

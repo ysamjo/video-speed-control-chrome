@@ -55,10 +55,11 @@ const makeEl = (over = {}) => Object.assign({
 function load({ initial = 1.8, withVideo = true, storedSpeed = 1.8, deferSettings = false,
   cinema = true, hostname = 'example.com', pathname = '/', theater = false,
   theaterButton = true, applyTheaterOnClick = true, channel = null, channelName = '',
-  channelRules, kids = true, ownerVideoId = null, ancestorOrigins = [] } = {}) {
+  channelRules, kids = true, ownerVideoId = null, ancestorOrigins = [], collab = false, metadata } = {}) {
   const winListeners = {}
   const created = [], saved = [], storageListeners = [], pendingGets = [], observers = []
   const storage = { playbackSpeed: storedSpeed, cinemaMode: cinema, youtubeKidsNormalSpeed: kids }
+  const requests = []
   if (channelRules !== undefined) storage.channelSpeeds = channelRules
   let fakeNow = 1000, theaterClicks = 0
   const video = makeVideo(initial)
@@ -95,6 +96,7 @@ function load({ initial = 1.8, withVideo = true, storedSpeed = 1.8, deferSetting
     querySelector: (s) => {
       if (s === 'video') return withVideo ? video : null
       if (s === 'ytd-watch-flexy') return flexy
+      if (s === 'ytd-watch-flexy #owner') return collab ? {} : null
       if (s === '.ytp-size-button') return sizeButton
       return null
     },
@@ -108,7 +110,13 @@ function load({ initial = 1.8, withVideo = true, storedSpeed = 1.8, deferSetting
   const window = { addEventListener: (t, f) => (winListeners[t] ||= []).push(f), document }
 
   vm.runInNewContext(`${rulesCode};\n${code}`, {
-    document, window, console, setTimeout, clearTimeout, location, MutationObserver, URL,
+    document, window, console, setTimeout, clearTimeout, location, MutationObserver, URL, AbortSignal,
+    fetch: metadata ? async url => {
+      const id = new URL(new URL(url).searchParams.get('url')).searchParams.get('v')
+      requests.push(id)
+      const data = await metadata(id)
+      return { ok: !!data, json: async () => data }
+    } : undefined,
     Date: { now: () => fakeNow },
     chrome: {
       storage: {
@@ -128,7 +136,7 @@ function load({ initial = 1.8, withVideo = true, storedSpeed = 1.8, deferSetting
   })
 
   return {
-    winListeners, video, saved, document, location,
+    winListeners, video, saved, document, location, requests,
     finishSettings: () => pendingGets.splice(0).forEach(run => run()),
     advance: (ms) => { fakeNow += ms },
     // Dokument-Capture und Zielphase teilen EIN Event; Shadow DOM verlässt nur die Zielphase.
@@ -159,6 +167,12 @@ function load({ initial = 1.8, withVideo = true, storedSpeed = 1.8, deferSetting
       location.href = url.href
       location.pathname = url.pathname
       document.dispatchEvent({ type: 'yt-navigate-finish' })
+    },
+    playerSelect(rate, target = video) {
+      const control = makeEl({ textContent: String(rate), getAttribute: key => key === 'role' ? 'menuitemradio' : null, matches: selector => selector.includes('menuitemradio') })
+      const event = { type: 'click', target: control, isTrusted: true, composedPath: () => [control] }
+      for (const fn of winListeners.click || []) fn(event)
+      target.playbackRate = rate
     },
     toast: () => created.filter(e => /^\d+\.\d\d$/.test(e.textContent)).pop()?.textContent ?? null,
     savedSpeed: () => storage.playbackSpeed,
