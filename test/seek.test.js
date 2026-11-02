@@ -10,7 +10,6 @@ async function run() {
     await tick()
     env.advance(5000)
     env.video.playbackRate = 1.8
-    await tick()
     env.media(type)
     await tick()
     s.check(`R bleibt bei 1.00 nach ${type}`, env.video.playbackRate, 1)
@@ -90,7 +89,8 @@ async function run() {
     s.check('Skip/Resume schreibt nicht in Sync-Storage', env.saved.length, 0)
     press(env.winListeners, 's')
     await tick()
-    s.check('S speichert weiterhin die gewählte Rate', env.savedSpeed(), 1.7)
+    s.check('S ändert nur das laufende Video', env.video.playbackRate, 1.7)
+    s.check('S verändert das Standardtempo nicht', env.savedSpeed(), 1.8)
   }
 
   {

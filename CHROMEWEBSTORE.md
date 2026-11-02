@@ -1,20 +1,20 @@
 # Chrome Web Store – Video Speed Control with Keyboard
 
-Stand: 2026-11-02. Version 2026.11.2 ist für lokale Installation vorbereitet; keine Store-Einreichung vorgenommen.
+Stand: 2026-11-02. Version 2026.11.3 ist für lokale Installation vorbereitet; keine Store-Einreichung vorgenommen.
 
 ## Store-Eintrag
 
 Name: Video Speed Control with Keyboard
 
-Kurzbeschreibung: Videotempo per Hotkey steuern, feste Geschwindigkeiten pro YouTube-Kanal verwalten und YouTube Kids auf 1,0× halten.
+Kurzbeschreibung: Videotempo pro Kanal und YouTube Kids vorgeben und für einzelne Videos manuell überschreiben.
 
-Beschreibung: Steuere die Geschwindigkeit von HTML-Videos mit frei wählbaren Tasten. Verwalte feste Ausnahmen für einzelne YouTube-Kanäle. sportstudio spielt standardmäßig mit 1,0-facher Geschwindigkeit; YouTube Kids bleibt auf Wunsch auf der gesamten Website bei 1,0×. Die Regeln gelten auch nach einem Videowechsel und haben Vorrang vor Tempoänderungen im Player. Ohne Ausnahme gilt dein gespeichertes Standardtempo. Optional bleibt auf YouTube der Kino-Modus aktiv. Bekannte Redirect-Zwischenseiten externer Links werden übersprungen.
+Beschreibung: Steuere die Geschwindigkeit von HTML-Videos mit frei wählbaren Tasten. Verwalte Startvorgaben für einzelne YouTube-Kanäle. sportstudio spielt standardmäßig mit 1,0-facher Geschwindigkeit; YouTube Kids startet auf Wunsch jedes Video mit 1,0×. Du kannst das Tempo im laufenden Video per Hotkey oder im Player überschreiben; beim nächsten Video gilt wieder die Vorgabe. Pausieren und Spulen behalten deine aktuelle Auswahl. Ohne Ausnahme gilt dein gespeichertes Standardtempo. Optional bleibt auf YouTube der Kino-Modus aktiv. Bekannte Redirect-Zwischenseiten externer Links werden übersprungen.
 
 Bedienung: Erweiterungssymbol anklicken, Kanal hinzufügen, Tempo eintragen und Einstellungen speichern.
 
 Kategorie: Productivity. Sprache: Deutsch.
 
-Zweck: Die Wiedergabegeschwindigkeit von Webvideos mit einem Standardtempo und festen Ausnahmen steuern.
+Zweck: Die Wiedergabegeschwindigkeit von Webvideos mit Startvorgaben und einer manuellen Auswahl pro Video steuern.
 
 ## Grafiken
 
@@ -31,7 +31,7 @@ Es kommen keine neuen Berechtigungen hinzu.
 
 ## Datenschutz
 
-Kein eigener Server, keine Analyse, keine Werbung und keine Übermittlung an den Entwickler. Die Erweiterung liest die aktuelle Seitenadresse und die Kanalangabe des abgespielten Videos lokal zur Regelauswahl. Beim Speichern eines neuen Kanal-Handles oder Kanal-Links wird einmalig dessen öffentliche YouTube-Kanalseite ohne Anmelde-Cookies abgerufen, um Handle und Kanal-ID abzugleichen. YouTube erhält dabei die normale Webanfrage inklusive IP-Adresse. Bereits aufgelöste Regeln benötigen keinen weiteren Abruf. Es wird kein Wiedergabe- oder Browserverlauf gespeichert. Gespeicherte Einstellungen einschließlich selbst eingetragener Kanalregeln werden über Chrome Sync verarbeitet, wenn der Nutzer diese Funktion aktiviert hat.
+Kein eigener Server, keine Analyse, keine Werbung und keine Übermittlung an den Entwickler. Die Erweiterung liest die aktuelle Seitenadresse und die Kanalangabe des abgespielten Videos lokal zur Regelauswahl. Beim Speichern eines neuen Kanal-Handles oder Kanal-Links wird einmalig dessen öffentliche YouTube-Kanalseite ohne Anmelde-Cookies abgerufen, um Handle und Kanal-ID abzugleichen. YouTube erhält dabei die normale Webanfrage inklusive IP-Adresse. Bereits aufgelöste Regeln benötigen keinen weiteren Kanalabruf. Wenn YouTube bei gemeinsamen Uploads keinen Kanal-Link anzeigt, werden die öffentlichen Videodaten dieses Videos einmalig ohne Anmelde-Cookies bei YouTube abgerufen, um dessen Hauptkanal zu erkennen; der Cache bleibt nur für die laufende Seite und hält höchstens 20 Videos. Es wird kein Wiedergabe- oder Browserverlauf gespeichert. Gespeicherte Einstellungen einschließlich selbst eingetragener Kanalregeln werden über Chrome Sync verarbeitet, wenn der Nutzer diese Funktion aktiviert hat.
 
 Daten werden weder verkauft noch für andere Zwecke, Bonitätsprüfungen oder Kreditentscheidungen verwendet. Eine öffentliche Datenschutz-URL und die verbindlichen Store-Offenlegungen sind vor einer Einreichung einzutragen.
 
@@ -43,6 +43,7 @@ Aktuell: entpackte lokale Erweiterung und ZIP. Store-Sichtbarkeit und Regionen n
 
 | Version | Datum | Änderung | Status |
 | --- | --- | --- | --- |
+| 2026.11.3 | 2026-11-02 | Temporäre manuelle Auswahl per Hotkey/Player, Rückkehr zur Vorgabe beim nächsten Video, Einstellungen bleiben unverändert | Lokal vorbereitet |
 | 2026.11.2 | 2026-11-02 | Feste Kanalregeln, sportstudio 1,0×, YouTube Kids 1,0×, Kanalverwaltung, SPA-Wechsel und Live-Übernahme | Lokal vorbereitet |
 
 ## Review-Hinweise

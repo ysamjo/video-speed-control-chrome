@@ -1,61 +1,38 @@
-// Regression 2026-09-22: "s und d geht nicht mehr".
-// Ursache: step() rechnete die Schrittweite ab der gerade LAUFENDEN Rate. Steht das Video
-// fremdbestimmt auf 1.00× (Player-Reset, frisch geladen, laufender Toggle), landete ein
-// Schritt bei 1.10 statt 1.90 – und überschrieb die gespeicherte Geschwindigkeit mit dem
-// Fremdwert. Basis muss die gespeicherte Geschwindigkeit sein.
+// Schrittweite bleibt unabhängig von automatischen Player-Resets und R.
+// Manuelle Änderungen gelten nur für das aktuelle Video; Vorgaben bleiben unverändert.
 const { load, press, tick, suite } = require('./harness')
-
-/** Video in den Zustand "läuft mit 1.00×, kein Enforce-Fenster mehr aktiv" bringen. */
-async function parkAtOne(env) {
-  env.advance(2000)
-  env.video.playbackRate = 1
-  await tick()
-}
-
 async function run() {
   const s = suite()
-
   {
-    const env = load({ initial: 1.8 })
-    await parkAtOne(env)
+    const env = load()
+    env.video.playbackRate = 1 // Player-Reset direkt vor dem Hotkey
     press(env.winListeners, 'd'); await tick()
-    s.check('"d" bei laufender 1.00× → 1.90', env.video.playbackRate, 1.9)
-    s.check('Toast zeigt 1.90', env.toast(), '1.90')
+    s.check('D ignoriert automatischen Player-Reset', env.video.playbackRate, 1.9)
+    s.check('Toast zeigt die tatsächliche Auswahl', env.toast(), '1.90')
+    s.check('Standardtempo bleibt 1,8×', env.savedSpeed(), 1.8)
   }
-
   {
-    const env = load({ initial: 1.8 })
-    await parkAtOne(env)
+    const env = load()
+    press(env.winListeners, 'r'); await tick()
     press(env.winListeners, 's'); await tick()
-    s.check('"s" bei laufender 1.00× → 1.70', env.video.playbackRate, 1.7)
+    s.check('S nach R rechnet ab der bisherigen Auswahl', env.video.playbackRate, 1.7)
   }
-
-  // Die gespeicherte Geschwindigkeit darf nicht mit der laufenden Rate verfälscht werden.
   {
-    const env = load({ initial: 1.8 })
-    await parkAtOne(env)
+    const env = load()
+    env.playerSelect(1.25); await tick()
     press(env.winListeners, 'd'); await tick()
-    s.check('Gespeichert wird 1.90, nicht 1.10', env.savedSpeed(), 1.9)
+    s.check('D rechnet ab der nativen manuellen Auswahl', env.video.playbackRate, 1.35)
   }
-
-  // Schritt für Schritt ab der gespeicherten Rate, nicht ab der laufenden.
   {
-    const env = load({ initial: 1.8 })
-    await parkAtOne(env)
+    const env = load()
     press(env.winListeners, 'd'); await tick()
     press(env.winListeners, 'd'); await tick()
-    s.check('Zwei Schritte ab 1.80 → 2.00', env.video.playbackRate, 2)
+    s.check('Zwei Schritte ab 1,8× ergeben 2,0×', env.video.playbackRate, 2)
+    s.check('Hotkeys schreiben keine Vorgaben in Storage', env.saved.length, 0)
+    env.navigate('/next-video')
+    env.media('loadedmetadata')
+    s.check('Neues Video nutzt wieder 1,8×', env.video.playbackRate, 1.8)
   }
-
-  // Gegenprobe: Steht das Video schon auf der gespeicherten Rate, bleibt alles wie gewohnt.
-  {
-    const env = load({ initial: 1.8 })
-    press(env.winListeners, 'd'); await tick()
-    s.check('Ohne Fremdeinfluss: 1.80 → 1.90', env.video.playbackRate, 1.9)
-  }
-
   return s.report()
 }
-
-if (require.main === module) run().then(f => process.exit(f ? 1 : 0))
 module.exports = { run }

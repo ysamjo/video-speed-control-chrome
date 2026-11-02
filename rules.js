@@ -43,7 +43,8 @@
   const mediaKey = location => {
     try {
       const url = new URL(location.href)
-      return `${url.origin}${url.pathname}${url.pathname === '/watch' ? `?v=${url.searchParams.get('v') || ''}` : ''}`
+      const id = url.searchParams.get('v')
+      return `${url.origin}${url.pathname}${id ? `?v=${id}` : ''}`
     } catch { return location.href || '' }
   }
 
@@ -72,13 +73,13 @@
   }
 
   const resolve = ({ location, channels = [], rules = [], speed = 1.8, kids = true, kidsContext = false }) => {
-    if (kids && (isKids(location.hostname) || kidsContext)) return { key: 'kids', rate: 1, locked: true }
+    if (kids && (isKids(location.hostname) || kidsContext)) return { key: 'kids', rate: 1 }
     const href = (location.href || '').toLowerCase()
     // Kanalregeln sind spezifischer als die bisherigen URL-Muster.
     const rule = rules.find(r => r.type === 'channel' && isYouTube(location.hostname) && [r.pattern, ...(r.aliases || [])].some(key => channels.includes(key)))
       ?? rules.find(r => r.type === 'url' && href.includes(r.pattern))
-    return rule ? { key: `${rule.type}:${rule.pattern}`, rate: rule.speed, locked: true }
-      : { key: 'global', rate: speed, locked: false }
+    return rule ? { key: `${rule.type}:${rule.pattern}`, rate: rule.speed }
+      : { key: 'global', rate: speed }
   }
   globalThis.VSC_RULES = { DEFAULT_CHANNEL_RULES, isYouTube, isKids, validSpeed, channelKey, normalizeRules, mediaKey, readChannel, resolve }
   if (typeof module !== 'undefined') module.exports = globalThis.VSC_RULES

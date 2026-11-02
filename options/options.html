@@ -9,13 +9,13 @@
 <body>
   <main>
     <h1>Video Speed Control</h1>
-    <p class="intro">Dein Standardtempo für Videos. Feste Ausnahmen für einzelne YouTube-Kanäle und YouTube Kids.</p>
+    <p class="intro">Dein Standardtempo für Videos. Eigene Vorgaben für einzelne YouTube-Kanäle und YouTube Kids.</p>
     <p id="error" class="error" role="alert" tabindex="-1" hidden></p>
     <form id="settings" action="" method="post">
       <fieldset id="settings-fields" disabled>
         <section aria-labelledby="channels-title">
-          <h2 id="channels-title">Feste Geschwindigkeit pro Kanal</h2>
-          <p id="channels-help">Trage den YouTube-Kanal als <strong>@Handle</strong>, Kanal-Link oder exakten Kanalnamen ein. Die Regel gilt auf den Videos des Kanals – auch nach einem Videowechsel. Hotkeys und Änderungen im Player überschreiben sie nicht.</p>
+          <h2 id="channels-title">Standardgeschwindigkeit pro Kanal</h2>
+          <p id="channels-help">Trage den YouTube-Kanal als <strong>@Handle</strong>, Kanal-Link oder exakten Kanalnamen ein. Jedes neue Video dieses Kanals startet mit der Vorgabe. Du kannst das Tempo per Hotkey oder im Player für das laufende Video ändern; beim nächsten Video gilt wieder die Vorgabe.</p>
           <div id="channels"></div>
           <button id="add-channel" type="button">Kanal hinzufügen</button>
           <p class="hint">Ohne passende Regel gilt dein Standardtempo. Bei mehreren Treffern hat die erste Kanalregel Vorrang; bisherige URL-Regeln bleiben erhalten.</p>
@@ -24,22 +24,22 @@
           <h2 id="kids-title">YouTube Kids</h2>
           <label class="check" for="kids">
             <input type="checkbox" id="kids" name="kids">
-            <span><strong>Alle Videos auf YouTube Kids auf 1,0× halten</strong><br>Gilt für die gesamte Website youtubekids.com und hat Vorrang vor allen anderen Regeln.</span>
+            <span><strong>Videos auf YouTube Kids mit 1,0× starten</strong><br>Gilt für die gesamte Website youtubekids.com. Manuell überschreibbar bis zum nächsten Video; die Kids-Vorgabe hat Vorrang vor Kanalregeln.</span>
           </label>
         </section>
         <section aria-labelledby="speed-title">
           <h2 id="speed-title">Standardtempo</h2>
           <label for="speed">Geschwindigkeit ohne feste Regel (×)</label>
           <input id="speed" name="speed" type="number" min="0.25" max="10" step="0.01" required inputmode="decimal" aria-describedby="speed-help">
-          <p id="speed-help" class="hint">0,25 bis 10. Mit S / D in 0,1er-Schritten ändern. R wechselt zwischen 1,0× und deinem gespeicherten Tempo.</p>
+          <p id="speed-help" class="hint">0,25 bis 10. S / D ändern das Tempo für dieses Video in 0,1er-Schritten. R wechselt zwischen 1,0× und deiner Auswahl. Dauerhafte Vorgaben änderst du hier in den Einstellungen.</p>
         </section>
         <section aria-labelledby="hotkeys-title">
           <h2 id="hotkeys-title">Hotkeys</h2>
-          <p id="hotkeys-help">Je ein Zeichen. Die Tasten gelten außerhalb fester Regeln und greifen nicht beim Tippen in Eingabefelder oder mit Strg, Alt oder Cmd. Bei Buchstaben wird auch Shift ignoriert.</p>
+          <p id="hotkeys-help">Je ein Zeichen. Die Tasten gelten auch bei Kanal- und Kids-Vorgaben und greifen nicht beim Tippen in Eingabefelder oder mit Strg, Alt oder Cmd. Bei Buchstaben wird auch Shift ignoriert.</p>
           <div class="hotkeys">
             <label for="decrease">Langsamer<input id="decrease" name="decrease" maxlength="1" required autocomplete="off" aria-describedby="hotkeys-help"></label>
             <label for="increase">Schneller<input id="increase" name="increase" maxlength="1" required autocomplete="off" aria-describedby="hotkeys-help"></label>
-            <label for="toggle">1,0× / gespeichert<input id="toggle" name="toggle" maxlength="1" required autocomplete="off" aria-describedby="hotkeys-help"></label>
+            <label for="toggle">1,0× / Auswahl<input id="toggle" name="toggle" maxlength="1" required autocomplete="off" aria-describedby="hotkeys-help"></label>
           </div>
         </section>
         <section aria-labelledby="cinema-title">
