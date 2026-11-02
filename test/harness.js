@@ -4,6 +4,7 @@ const path = require('path')
 const vm = require('vm')
 
 const code = fs.readFileSync(path.join(__dirname, '..', 'content.js'), 'utf8')
+const rulesCode = fs.readFileSync(path.join(__dirname, '..', 'rules.js'), 'utf8')
 const tick = (ms = 30) => new Promise(r => setTimeout(r, ms))
 
 // Identische Listener werden wie im DOM nur einmal registriert.
@@ -53,10 +54,12 @@ const makeEl = (over = {}) => Object.assign({
 
 function load({ initial = 1.8, withVideo = true, storedSpeed = 1.8, deferSettings = false,
   cinema = true, hostname = 'example.com', pathname = '/', theater = false,
-  theaterButton = true, applyTheaterOnClick = true } = {}) {
+  theaterButton = true, applyTheaterOnClick = true, channel = null, channelName = '',
+  channelRules, kids = true, ownerVideoId = null, ancestorOrigins = [] } = {}) {
   const winListeners = {}
   const created = [], saved = [], storageListeners = [], pendingGets = [], observers = []
-  const storage = { playbackSpeed: storedSpeed, cinemaMode: cinema, channelSpeeds: [{ pattern: 'sport', speed: 1.1 }] }
+  const storage = { playbackSpeed: storedSpeed, cinemaMode: cinema, youtubeKidsNormalSpeed: kids }
+  if (channelRules !== undefined) storage.channelSpeeds = channelRules
   let fakeNow = 1000, theaterClicks = 0
   const video = makeVideo(initial)
 
@@ -64,6 +67,7 @@ function load({ initial = 1.8, withVideo = true, storedSpeed = 1.8, deferSetting
   const isYouTube = /(^|\.)youtube(-nocookie)?\.com$/.test(hostname)
   const theaterAttrs = new Set(theater ? ['theater'] : [])
   const flexy = isYouTube ? {
+    getAttribute: n => n === 'video-id' ? ownerVideoId : null,
     hasAttribute: (n) => theaterAttrs.has(n),
     setAttribute: (n) => { theaterAttrs.add(n) },
     removeAttribute: (n) => { theaterAttrs.delete(n) },
@@ -73,7 +77,9 @@ function load({ initial = 1.8, withVideo = true, storedSpeed = 1.8, deferSetting
     click() { theaterClicks++; if (applyTheaterOnClick) theaterAttrs.add('theater') },
   } : null
 
-  const location = { hostname, pathname, href: `https://${hostname}${pathname}` }
+  const initialUrl = new URL(`https://${hostname}${pathname}`)
+  const location = { hostname, pathname: initialUrl.pathname, href: initialUrl.href, ancestorOrigins }
+  const owner = { getAttribute: name => name === 'href' ? `/${channel}` : null, get textContent() { return channelName } }
 
   class MutationObserver {
     constructor(cb) { this.cb = cb }
@@ -92,13 +98,17 @@ function load({ initial = 1.8, withVideo = true, storedSpeed = 1.8, deferSetting
       if (s === '.ytp-size-button') return sizeButton
       return null
     },
-    querySelectorAll: () => [],
+    querySelectorAll: selector => {
+      if (selector === 'video') return withVideo ? [video] : []
+      if (channel && /#owner|#upload-info|reel-video-renderer|ytm-.*owner|ytp-title-channel/.test(selector)) return [owner]
+      return []
+    },
     createElement: () => { const el = makeEl(); created.push(el); return el },
   })
   const window = { addEventListener: (t, f) => (winListeners[t] ||= []).push(f), document }
 
-  vm.runInNewContext(code, {
-    document, window, console, setTimeout, clearTimeout, location, MutationObserver,
+  vm.runInNewContext(`${rulesCode};\n${code}`, {
+    document, window, console, setTimeout, clearTimeout, location, MutationObserver, URL,
     Date: { now: () => fakeNow },
     chrome: {
       storage: {
@@ -134,6 +144,21 @@ function load({ initial = 1.8, withVideo = true, storedSpeed = 1.8, deferSetting
     changeCinema(value) {
       storage.cinemaMode = value
       for (const fn of storageListeners) fn({ cinemaMode: { newValue: value } }, 'sync')
+    },
+    changeRules(value) {
+      storage.channelSpeeds = value
+      for (const fn of storageListeners) fn({ channelSpeeds: { newValue: value } }, 'sync')
+    },
+    changeKids(value) {
+      storage.youtubeKidsNormalSpeed = value
+      for (const fn of storageListeners) fn({ youtubeKidsNormalSpeed: { newValue: value } }, 'sync')
+    },
+    setChannel(value, name = '', videoId = null) { channel = value; channelName = name; ownerVideoId = videoId },
+    navigate(path) {
+      const url = new URL(path, location.href)
+      location.href = url.href
+      location.pathname = url.pathname
+      document.dispatchEvent({ type: 'yt-navigate-finish' })
     },
     toast: () => created.filter(e => /^\d+\.\d\d$/.test(e.textContent)).pop()?.textContent ?? null,
     savedSpeed: () => storage.playbackSpeed,

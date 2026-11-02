@@ -9,51 +9,52 @@
 <body>
   <main>
     <h1>Video Speed Control</h1>
-
-    <section>
-      <h2>Hotkeys</h2>
-      <p>Lege fest, welche Taste welche Aktion auslöst. Erlaubt ist genau ein Zeichen pro Feld (Buchstabe, Ziffer oder Sonderzeichen wie <code>,</code> oder <code>.</code>). Steuerungs-, Alt- und Cmd-Kombinationen lösen nie aus; bei Buchstaben wird zusätzlich Shift ignoriert.</p>
-      <table>
-        <tr><th>Aktion</th><th>Taste</th></tr>
-        <tr><td>Playback speed verringern</td><td><input id="decrease" maxlength="1" autocomplete="off"></td></tr>
-        <tr><td>Playback speed erhöhen</td><td><input id="increase" maxlength="1" autocomplete="off"></td></tr>
-        <tr><td>Zwischen 1.00× und gespeicherter Geschwindigkeit umschalten</td><td><input id="toggle" maxlength="1" autocomplete="off"></td></tr>
-      </table>
-      <p id="error" class="error" hidden></p>
-    </section>
-
-    <section>
-      <h2>Geschwindigkeit</h2>
-      <p>Mit dem Umschalter (Standard: <code>R</code>) wechselt das Video zwischen 1.00× und dieser Geschwindigkeit. Die Hotkeys zum Erhöhen/Verringern (Standard: <code>D</code>/<code>S</code>) ändern sie in 0.1er-Schritten und speichern automatisch.</p>
-      <label>Gespeicherte Geschwindigkeit: <input id="speed" type="number" min="0.25" max="10" step="0.05" width="6"> ×</label>
-    </section>
-
-    <section>
-      <h2>Kanal-/URL-spezifische Geschwindigkeit</h2>
-      <p>Pro Zeile ein Muster und eine Geschwindigkeit, getrennt durch <code>=</code> (z. B. <code>sport = 1.1</code> oder <code>youtube.com/@sportkanal = 1.1</code>). Passt das Muster (Groß-/Kleinschreibung egal) auf die URL, wird diese Geschwindigkeit für neue Videos verwendet. Wenn nichts passt, gilt die globale Geschwindigkeit oben.</p>
-      <textarea id="channels" rows="6" style="width:100%;font-family:monospace"></textarea>
-    </section>
-    <section>
-      <h2>Weiteres Verhalten</h2>
-      <ul>
-        <li>Die Geschwindigkeit wird pro Geräte-Sync gespeichert und bei jedem Video automatisch angewendet.</li>
-        <li>Bekannte Redirect-Seiten externer Links (Google <code>/url?q=</code>, Bing <code>/ck/a</code>, Facebook <code>l.php</code>, Steam <code>linkfilter</code>, DuckDuckGo, Reddit, X/Twitter, <code>href.li</code>, Instagram) werden automatisch übersprungen.</li>
-        <li>
-          <label class="check">
-            <input type="checkbox" id="cinema">
-            <span><strong>Kino-Modus auf YouTube immer aktiv:</strong> Auf Watch- und Live-Seiten wird der Theatermodus automatisch eingeschalten – der Player wird breit, aber nicht vollbild. Setzt YouTube den Modus zurück oder wird er manuell ausgeschaltet, schaltet die Erweiterung ihn wieder ein.</span>
+    <p class="intro">Dein Standardtempo für Videos. Feste Ausnahmen für einzelne YouTube-Kanäle und YouTube Kids.</p>
+    <p id="error" class="error" role="alert" tabindex="-1" hidden></p>
+    <form id="settings" action="" method="post">
+      <fieldset id="settings-fields" disabled>
+        <section aria-labelledby="channels-title">
+          <h2 id="channels-title">Feste Geschwindigkeit pro Kanal</h2>
+          <p id="channels-help">Trage den YouTube-Kanal als <strong>@Handle</strong>, Kanal-Link oder exakten Kanalnamen ein. Die Regel gilt auf den Videos des Kanals – auch nach einem Videowechsel. Hotkeys und Änderungen im Player überschreiben sie nicht.</p>
+          <div id="channels"></div>
+          <button id="add-channel" type="button">Kanal hinzufügen</button>
+          <p class="hint">Ohne passende Regel gilt dein Standardtempo. Bei mehreren Treffern hat die erste Kanalregel Vorrang; bisherige URL-Regeln bleiben erhalten.</p>
+        </section>
+        <section aria-labelledby="kids-title">
+          <h2 id="kids-title">YouTube Kids</h2>
+          <label class="check" for="kids">
+            <input type="checkbox" id="kids" name="kids">
+            <span><strong>Alle Videos auf YouTube Kids auf 1,0× halten</strong><br>Gilt für die gesamte Website youtubekids.com und hat Vorrang vor allen anderen Regeln.</span>
           </label>
-        </li>
-      </ul>
-    </section>
-
-    <div class="buttons">
-      <button id="save" class="primary">Speichern</button>
-      <button id="reset">Standard wiederherstellen</button>
-    </div>
-    <p id="status" class="status"></p>
+        </section>
+        <section aria-labelledby="speed-title">
+          <h2 id="speed-title">Standardtempo</h2>
+          <label for="speed">Geschwindigkeit ohne feste Regel (×)</label>
+          <input id="speed" name="speed" type="number" min="0.25" max="10" step="0.01" required inputmode="decimal" aria-describedby="speed-help">
+          <p id="speed-help" class="hint">0,25 bis 10. Mit S / D in 0,1er-Schritten ändern. R wechselt zwischen 1,0× und deinem gespeicherten Tempo.</p>
+        </section>
+        <section aria-labelledby="hotkeys-title">
+          <h2 id="hotkeys-title">Hotkeys</h2>
+          <p id="hotkeys-help">Je ein Zeichen. Die Tasten gelten außerhalb fester Regeln und greifen nicht beim Tippen in Eingabefelder oder mit Strg, Alt oder Cmd. Bei Buchstaben wird auch Shift ignoriert.</p>
+          <div class="hotkeys">
+            <label for="decrease">Langsamer<input id="decrease" name="decrease" maxlength="1" required autocomplete="off" aria-describedby="hotkeys-help"></label>
+            <label for="increase">Schneller<input id="increase" name="increase" maxlength="1" required autocomplete="off" aria-describedby="hotkeys-help"></label>
+            <label for="toggle">1,0× / gespeichert<input id="toggle" name="toggle" maxlength="1" required autocomplete="off" aria-describedby="hotkeys-help"></label>
+          </div>
+        </section>
+        <section aria-labelledby="cinema-title">
+          <h2 id="cinema-title">YouTube-Ansicht</h2>
+          <label class="check" for="cinema"><input type="checkbox" id="cinema" name="cinema"><span><strong>Kino-Modus immer aktiv</strong><br>Der Player bleibt auf YouTube-Videoseiten breit, ohne ins Vollbild zu wechseln.</span></label>
+        </section>
+        <div class="buttons">
+          <button id="save" type="submit" class="primary">Einstellungen speichern</button>
+          <button id="reset" type="button">Standard wiederherstellen</button>
+        </div>
+      </fieldset>
+    </form>
+    <p id="status" class="status" role="status"></p>
   </main>
-
+  <script src="../rules.js"></script>
   <script src="options.js"></script>
 </body>
 </html>

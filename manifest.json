@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Video Speed Control with Keyboard",
-  "version": "2026.9.23",
-  "description": "Ändere die Abspielgeschwindigkeit von HTML-Videos per Hotkey (Standard: S langsamer, D schneller, R zurücksetzen). Merkt sich die Geschwindigkeit. Überspringt bekannte Redirect-Seiten externer Links.",
+  "version": "2026.11.2",
+  "description": "Videotempo per Hotkey steuern, feste Geschwindigkeiten pro YouTube-Kanal verwalten und YouTube Kids auf 1,0× halten.",
   "author": "Vitus Schuhwerk",
   "license": "MIT",
   "permissions": ["storage"],
@@ -39,7 +39,7 @@
     },
     {
       "matches": ["<all_urls>"],
-      "js": ["content.js"],
+      "js": ["rules.js", "content.js"],
       "run_at": "document_start",
       "all_frames": true,
       "match_about_blank": true
