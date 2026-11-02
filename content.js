@@ -64,9 +64,10 @@ const speedControl = (() => {
   const SPEED_KEY = 'playbackSpeed'
   const HOTKEYS_KEY = 'hotkeys'
   const CHANNEL_RULES_KEY = 'channelSpeeds'
+  const KIDS_KEY = 'youtubeKidsNormalSpeed'
   const DEFAULT_HOTKEYS = { decrease: 's', increase: 'd', toggle: 'r' }
   const MIN = 0.25, MAX = 10, STEP = 0.1, TOGGLE_LOW = 1
-  const DEFAULT_CHANNEL_RULES = [{ pattern: 'sport', speed: 1.1 }]
+  const { DEFAULT_CHANNEL_RULES, normalizeRules, readChannel, resolve, mediaKey, isYouTube, isKids } = VSC_RULES
   const ENFORCE_MS = 1500   // begrenzter Schutz nach Hotkey, Skip und Wiederaufnahme
   const MEDIA_EVENTS = ['play', 'playing', 'seeking', 'seeked', 'loadedmetadata']
   const MAX_RESTORES = 10   // Sicherheitsnetz gegen Endlosgefechte mit dem Player
@@ -79,6 +80,9 @@ const speedControl = (() => {
   let speed = 1.8
   let hotkeys = { ...DEFAULT_HOTKEYS }
   let channelRules = []
+  let kids = true
+  let navigating = false
+  let contextTimer
   let settingsLoaded = false
   let video
   // Auswahl und Schutz gehören zum jeweiligen Video, nicht zum zuletzt aktiven Player.
@@ -88,20 +92,10 @@ const speedControl = (() => {
 
   const clamp = s => Math.round(Math.min(MAX, Math.max(MIN, s)) * 100) / 100
   const stored = () => speed
-  const normalizeRules = (raw) => {
-    if (!Array.isArray(raw)) return []
-    return raw.map(r => ({
-      pattern: String(r?.pattern ?? '').trim().toLowerCase(),
-      speed: clamp(Number(r?.speed) || 1),
-    })).filter(r => r.pattern)
-  }
-  const speedForContext = () => {
-    const href = (typeof location !== 'undefined' ? (location.href || '') : '').toLowerCase()
-    for (const rule of channelRules) {
-      if (href.includes(rule.pattern)) return rule.speed
-    }
-    return speed
-  }
+  const kidsContext = Array.from(location.ancestorOrigins || []).some(origin => {
+    try { return isKids(new URL(origin).hostname) } catch { return false }
+  })
+  const context = () => resolve({ location, channels: navigating ? [] : readChannel(document, location), rules: channelRules, speed, kids, kidsContext })
 
   const saveSpeed = (v) => {
     speed = v
@@ -110,11 +104,12 @@ const speedControl = (() => {
 
   const loadSettings = () => {
     try {
-      chrome.storage.sync.get({ [SPEED_KEY]: 1.8, [HOTKEYS_KEY]: DEFAULT_HOTKEYS, [CHANNEL_RULES_KEY]: DEFAULT_CHANNEL_RULES }, (res) => {
+      chrome.storage.sync.get({ [SPEED_KEY]: 1.8, [HOTKEYS_KEY]: DEFAULT_HOTKEYS, [CHANNEL_RULES_KEY]: DEFAULT_CHANNEL_RULES, [KIDS_KEY]: true }, (res) => {
         if (chrome.runtime.lastError) return log('Fehler beim Laden der Einstellungen', chrome.runtime.lastError)
         speed = clamp(Number(res[SPEED_KEY]) || 1)
         hotkeys = { ...DEFAULT_HOTKEYS, ...res[HOTKEYS_KEY] }
         channelRules = normalizeRules(res[CHANNEL_RULES_KEY])
+        kids = res[KIDS_KEY] !== false
         settingsLoaded = true
         scheduleInitialApply()
       })
@@ -124,6 +119,8 @@ const speedControl = (() => {
         if (changes[SPEED_KEY]?.newValue != null) speed = clamp(Number(changes[SPEED_KEY].newValue) || 1)
         if (changes[HOTKEYS_KEY]?.newValue) hotkeys = { ...DEFAULT_HOTKEYS, ...changes[HOTKEYS_KEY].newValue }
         if (changes[CHANNEL_RULES_KEY]?.newValue != null) channelRules = normalizeRules(changes[CHANNEL_RULES_KEY].newValue)
+        if (changes[KIDS_KEY]) kids = changes[KIDS_KEY].newValue !== false
+        if (changes[SPEED_KEY] || changes[CHANNEL_RULES_KEY] || changes[KIDS_KEY]) refreshContext(true)
       })
     } catch (e) {
       log('Kein Zugriff auf chrome.storage – nutze Defaults', e)
@@ -146,9 +143,22 @@ const speedControl = (() => {
   }
 
   const restore = ({ currentTarget: v }) => {
+    syncContext(v)
     const state = videoStates.get(v)
-    if (!state || Date.now() > state.enforceUntil || state.restores >= MAX_RESTORES) return
+    if (!state || (!state.locked && Date.now() > state.enforceUntil)) return
     if (v.playbackRate === state.rate && v.defaultPlaybackRate === state.rate) return
+    if (state.locked && Date.now() > state.enforceUntil) {
+      state.enforceUntil = Date.now() + ENFORCE_MS
+      state.restores = 0
+    }
+    if (state.restores >= MAX_RESTORES) {
+      // Feste Regeln dauerhaft halten, aber konkurrierende Player nicht heißlaufen lassen.
+      if (state.locked && !state.retry) state.retry = setTimeout(() => {
+        state.retry = null
+        if (v.isConnected !== false) restore({ currentTarget: v })
+      }, ENFORCE_MS + 1)
+      return
+    }
     state.restores++
     log(`Player set ${v.playbackRate}, restoring ${state.rate}`)
     writeRate(v, state.rate)
@@ -167,6 +177,10 @@ const speedControl = (() => {
       on(v, MEDIA_EVENTS, onMedia, true)
     }
     state.rate = value
+    const policy = context()
+    state.contextKey = mediaKey(location)
+    state.policyKey = policy.key
+    state.locked = policy.locked
     if (save) saveSpeed(value)
     if (protect) {
       state.enforceUntil = Date.now() + ENFORCE_MS
@@ -178,6 +192,8 @@ const speedControl = (() => {
 
   const step = (action, v) => {
     const target = v ?? video ?? findVideo()
+    const policy = context()
+    if (policy.locked) return apply(policy.rate, target, true, false, true)
     if (action === 'toggle') {
       // Immer auf 1.00× umschalten – und aus 1.00× heraus zurück auf die gespeicherte Rate.
       // Die Richtung wird bewusst gegen 1.00× geprüft, NICHT gegen `stored()`: sonst schaltet
@@ -240,11 +256,12 @@ const speedControl = (() => {
     if (handledMediaEvents.has(e)) return
     handledMediaEvents.add(e)
     if (type === 'play' || type === 'playing') video = target
+    syncContext(target)
     const state = videoStates.get(target)
     if (!state) {
       // Neues Video: passende Rate (Kanal/URL-Regel oder global) anwenden, aber nichts zurückschreiben und
       // Schutz aktivieren (Player setzen die Rate gern sofort wieder zurück).
-      apply(speedForContext(), target, false, false, true)
+      apply(context().rate, target, false, false, true)
       return
     }
     // Bekanntes Video: die EIGENE Auswahl behalten – z. B. das temporäre 1.00× nach „r".
@@ -259,10 +276,47 @@ const speedControl = (() => {
     }
   }
 
+  const syncContext = (v, force = false) => {
+    if (!v || !settingsLoaded) return
+    const state = videoStates.get(v)
+    const policy = context()
+    if (!state || state.contextKey !== mediaKey(location) || state.policyKey !== policy.key
+      || (policy.locked && state.rate !== policy.rate) || force) {
+      apply(policy.rate, v, false, false, true)
+    }
+  }
+
+  const refreshContext = (force = false) => {
+    if (!settingsLoaded) return
+    const videos = new Set(document.querySelectorAll('video'))
+    const active = findVideo()
+    if (active) videos.add(active)
+    if (video?.isConnected !== false && video) videos.add(video)
+    for (const v of videos) syncContext(v, force)
+  }
+
+  const scheduleContext = () => {
+    // YouTube mutiert ständig: einen kurzen Prüfzyklus bündeln, ohne Polling.
+    if (contextTimer) return
+    contextTimer = setTimeout(() => { contextTimer = null; refreshContext() }, 100)
+  }
+
+  const observeContext = () => {
+    if (!isYouTube(location.hostname)) return
+    document.addEventListener('yt-navigate-start', () => { navigating = true }, true)
+    document.addEventListener('yt-navigate-finish', () => { navigating = false; refreshContext(); scheduleContext() }, true)
+    window.addEventListener('popstate', scheduleContext, true)
+    const start = () => new MutationObserver(scheduleContext).observe(document.documentElement, {
+      childList: true, subtree: true, attributes: true, attributeFilter: ['href', 'video-id', 'is-active'],
+    })
+    if (document.documentElement) start()
+    else document.addEventListener('DOMContentLoaded', start, { once: true })
+  }
+
   const applyToInitialVideo = () => {
     video = findVideo()
     // Initial nur anwenden, nichts zurückschreiben (sonst onChanged-Lärm in allen Tabs).
-    if (video) apply(speedForContext(), video, false, false, true)
+    refreshContext()
   }
 
   const scheduleInitialApply = () => {
@@ -277,9 +331,10 @@ const speedControl = (() => {
   const init = () => {
     // window + capture + document-start: läuft vor den eigenen Handlern der Seite.
     on(window, ['keydown', 'keypress', 'keyup'], onKey, true)
-    on(document, ['play', 'playing'], onMedia, true)
+    on(document, MEDIA_EVENTS, onMedia, true)
 
     loadSettings()
+    observeContext()
   }
 
   return { init }
