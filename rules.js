@@ -1,6 +1,16 @@
 // Gemeinsame Regeln für Content Script und Einstellungsseite.
 ;(() => {
-  const DEFAULT_CHANNEL_RULES = [{ type: 'channel', pattern: '@sportstudio', aliases: ['channel/UCE0RhriywrL8XhXbo87tMKQ'], speed: 1 }]
+  // Sport- und Streaming-Kanäle: englischer Originalton / Sport läuft mit 1,0×.
+  const DEFAULT_CHANNEL_RULES = [
+    { type: 'channel', pattern: '@sportstudio', aliases: ['channel/UCE0RhriywrL8XhXbo87tMKQ'], speed: 1 },
+    { type: 'channel', pattern: '@skysport', aliases: ['channel/UCAvNr5DMVncoJnJAotXOjOQ'], speed: 1 },
+    { type: 'channel', pattern: '@skysportde', aliases: ['channel/UCuOwl-VgqBHOzR8hWnonBcA'], speed: 1 },
+    { type: 'channel', pattern: '@dazn', aliases: ['channel/UCdi3n18zcIZeTk_x9qvSgZw'], speed: 1 },
+    { type: 'channel', pattern: '@daznde', aliases: ['channel/UC-XArLCeEw91r9gmaDi-Ajw'], speed: 1 },
+    { type: 'channel', pattern: '@rtlsport', aliases: ['channel/UC8WYi3XQXsf-6FNvqoEvxag'], speed: 1 },
+    { type: 'channel', pattern: '@nfl', aliases: ['channel/UCDVYQ4Zhbm3S2dlz7P1GBDg'], speed: 1 },
+    { type: 'channel', pattern: '@nba', aliases: ['channel/UCWJ2lWNubArHWmf3FIHbfcQ'], speed: 1 },
+  ]
   const isYouTube = hostname => /(^|\.)youtube(?:-nocookie)?\.com$/i.test(hostname)
   const isKids = hostname => /(^|\.)youtubekids\.com$/i.test(hostname)
   const validSpeed = value => {

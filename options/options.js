@@ -6,6 +6,7 @@ const DEFAULTS = {
   channelSpeeds: DEFAULT_CHANNEL_RULES,
   youtubeKidsNormalSpeed: true,
   cinemaMode: true,
+  watchLaterCleanup: true,
 }
 const FIELDS = ['decrease', 'increase', 'toggle']
 const $ = id => document.getElementById(id)
@@ -63,6 +64,7 @@ const render = settings => {
   $('speed').value = validSpeed(settings.playbackSpeed) ?? DEFAULTS.playbackSpeed
   $('kids').checked = settings.youtubeKidsNormalSpeed !== false
   $('cinema').checked = settings.cinemaMode !== false
+  $('watch-later').checked = settings.watchLaterCleanup !== false
   $('channels').replaceChildren()
   normalizeRules(settings.channelSpeeds).forEach(rule => addRule(rule))
 }
@@ -113,7 +115,7 @@ const save = async event => {
     for (const rule of rules) {
       if (rule.type === 'channel' && !rule.aliases.length) rule.aliases = await resolveAliases(rule.pattern)
     }
-    await chrome.storage.sync.set({ hotkeys, playbackSpeed: speed, channelSpeeds: rules, youtubeKidsNormalSpeed: $('kids').checked, cinemaMode: $('cinema').checked })
+    await chrome.storage.sync.set({ hotkeys, playbackSpeed: speed, channelSpeeds: rules, youtubeKidsNormalSpeed: $('kids').checked, cinemaMode: $('cinema').checked, watchLaterCleanup: $('watch-later').checked })
     // Nach erfolgreicher Auflösung Aliasse behalten, auch wenn die Seite offen bleibt.
     ;[...$('channels').children].forEach((row, index) => { row.savedPattern = rules[index].pattern; row.aliases = rules[index].aliases })
     showStatus('Gespeichert – gilt ab sofort in allen Tabs.')
@@ -129,7 +131,7 @@ $('reset').addEventListener('click', async () => {
   try {
     await chrome.storage.sync.set(DEFAULTS)
     render(DEFAULTS)
-    showStatus('Standard wiederhergestellt: sportstudio 1,0×, YouTube Kids 1,0×, sonst 1,8×.')
+    showStatus('Standard wiederhergestellt: sportstudio 1,0×, YouTube Kids 1,0×, sonst 1,8×; Kino-Modus und Später-ansehen-Aufräumer an.')
   } catch (e) { showError(`Zurücksetzen fehlgeschlagen: ${e.message}`) }
 })
 const load = async () => {
