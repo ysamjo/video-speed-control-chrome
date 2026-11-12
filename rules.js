@@ -10,6 +10,20 @@
     { type: 'channel', pattern: '@rtlsport', aliases: ['channel/UC8WYi3XQXsf-6FNvqoEvxag'], speed: 1 },
     { type: 'channel', pattern: '@nfl', aliases: ['channel/UCDVYQ4Zhbm3S2dlz7P1GBDg'], speed: 1 },
     { type: 'channel', pattern: '@nba', aliases: ['channel/UCWJ2lWNubArHWmf3FIHbfcQ'], speed: 1 },
+    { type: 'channel', pattern: '@sportschau', aliases: ['channel/UCRFsyeKu07-LnHDG44O6uCA'], speed: 1 },
+    { type: 'channel', pattern: '@primevideosportde', aliases: ['channel/UCK2izXoHvraUFaPMU5B7vMQ'], speed: 1 },
+    { type: 'channel', pattern: '@eurosportdeutschland', aliases: ['channel/UCk452F_ypT9Q8b1S38-Ok8A'], speed: 1 },
+    { type: 'channel', pattern: '@sport1', aliases: ['channel/UCPj_Vtw0hKnhJapQuATBUrA'], speed: 1 },
+    { type: 'channel', pattern: '@ransport', aliases: ['channel/UCiMAc_TN1kSO3ErMtxUXfMA'], speed: 1 },
+    { type: 'channel', pattern: '@kicker', aliases: ['channel/UCQEHrmmI8kKJ6kAiQdQUjgg'], speed: 1 },
+    { type: 'channel', pattern: '@skysportaustria', aliases: ['channel/UC5dCegXiWjE57wKrhWnCo0g'], speed: 1 },
+    { type: 'channel', pattern: '@skysportnewshd', aliases: ['channel/UC1a3OGagvVFWPK1NAI0PcMQ'], speed: 1 },
+    { type: 'channel', pattern: '@magentasport', aliases: ['channel/UChr7ZXDFiPOEl543HM4Aj8g'], speed: 1 },
+    { type: 'channel', pattern: '@motogp', aliases: ['channel/UC8pYaQzbBBXg9GIOHRvTmDQ'], speed: 1 },
+    { type: 'channel', pattern: '@formula1', aliases: ['channel/UCB_qr75-ydFVKSF9Dmo6izg'], speed: 1 },
+    { type: 'channel', pattern: '@bundesliga', aliases: ['channel/UC6UL29enLNe4mqwTfAyeNuw'], speed: 1 },
+    { type: 'channel', pattern: '@dfb', aliases: ['channel/UCfMo0xj-sbdzHuzxvKdu1hw'], speed: 1 },
+    { type: 'channel', pattern: '@uefa', aliases: ['channel/UCyGa1YEx9ST66rYrJTGIKOw'], speed: 1 },
   ]
   const isYouTube = hostname => /(^|\.)youtube(?:-nocookie)?\.com$/i.test(hostname)
   const isKids = hostname => /(^|\.)youtubekids\.com$/i.test(hostname)
