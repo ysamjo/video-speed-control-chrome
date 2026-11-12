@@ -2,7 +2,7 @@
 
 Portierung des Userscripts „Video Speed Control with Keyboard" als Chrome-Erweiterung (Manifest V3).
 
-## Kanalvorgaben und manuelles Tempo (2026.11.4)
+## Kanalvorgaben und manuelles Tempo (2026.11.5)
 
 Klick auf das Erweiterungssymbol öffnet die Verwaltung. Unter **Standardgeschwindigkeit pro Kanal** lassen sich Kanäle hinzufügen, bearbeiten und entfernen. Trage vorzugsweise den **@Handle** (z. B. `@sportstudio`) oder den vollständigen YouTube-Kanal-Link ein, wähle das Tempo und klicke auf **Einstellungen speichern**. Auch Kanal-IDs und exakte Anzeigenamen sind möglich; Handles und IDs vermeiden Verwechslungen bei gleichen Namen. Beim Speichern eines neuen Kanal-Links werden Handle und Kanal-ID einmalig über die öffentliche YouTube-Kanalseite abgeglichen; ein Server oder API-Schlüssel ist nicht nötig.
 
@@ -58,7 +58,7 @@ das 1,5-s-Enforce-Fenster über eine steuerbare Uhr sowie YouTubes Watch-Contain
 
 ```sh
 npm test          # oder direkt: node test/run.js
-npm run build     # ZIP: dist/video-speed-control-2026.11.4.zip
+npm run build     # ZIP: dist/video-speed-control-2026.11.5.zip
 ```
 
 GitHub Actions führt bei Push auf `main` und bei Pull Requests `npm test` und `npm run build` aus (`.github/workflows/ci.yml`).

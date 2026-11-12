@@ -1,6 +1,6 @@
 {
   "name": "video-speed-control",
-  "version": "2026.11.4",
+  "version": "2026.11.5",
   "private": true,
   "description": "Chrome-Erweiterung: Abspielgeschwindigkeit von HTML-Videos per Hotkey steuern",
   "license": "MIT",

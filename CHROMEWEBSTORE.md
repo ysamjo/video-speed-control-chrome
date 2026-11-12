@@ -1,6 +1,6 @@
 # Chrome Web Store – Video Speed Control with Keyboard
 
-Stand: 2026-11-12. Version 2026.11.4 ist für lokale Installation vorbereitet; keine Store-Einreichung vorgenommen.
+Stand: 2026-11-12. Version 2026.11.5 ist für lokale Installation vorbereitet; keine Store-Einreichung vorgenommen.
 
 ## Store-Eintrag
 
