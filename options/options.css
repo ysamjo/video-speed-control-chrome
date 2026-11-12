@@ -26,6 +26,12 @@ button.primary:hover { background: #115e59; }
 .error { color: #b91c1c; font-weight: 600; }
 .status { color: #0f766e; font-weight: 600; min-height: 1.5em; }
 .hint { font-size: 14px; margin-top: 10px; }
+.diagnose { display: grid; gap: 12px; margin-top: 12px; }
+.diagnose-card { background: white; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px 16px; }
+.diagnose-card h3 { margin: 0 0 8px; font-size: 15px; color: #0f766e; overflow-wrap: anywhere; }
+.diagnose-card dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 16px; margin: 0; }
+.diagnose-card dt { font-weight: 600; color: #374151; }
+.diagnose-card dd { margin: 0; overflow-wrap: anywhere; }
 .check { display: flex; gap: 12px; align-items: flex-start; cursor: pointer; }
 .check input { width: 22px; min-height: 22px; height: 22px; flex-shrink: 0; margin-top: 2px; accent-color: #0f766e; }
 @media (max-width: 560px) {

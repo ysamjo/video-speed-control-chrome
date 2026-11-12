@@ -1,0 +1,23 @@
+[
+  { "handle": "@sportstudio", "id": "UCE0RhriywrL8XhXbo87tMKQ", "name": "sportstudio", "speed": 1 },
+  { "handle": "@sportschau", "id": "UCRFsyeKu07-LnHDG44O6uCA", "name": "Sportschau", "speed": 1 },
+  { "handle": "@skysport", "id": "UCAvNr5DMVncoJnJAotXOjOQ", "name": "Sky Sport", "speed": 1 },
+  { "handle": "@skysportde", "id": "UCuOwl-VgqBHOzR8hWnonBcA", "name": "Sky Sport DE", "speed": 1 },
+  { "handle": "@skysportaustria", "id": "UC5dCegXiWjE57wKrhWnCo0g", "name": "Sky Sport Austria", "speed": 1 },
+  { "handle": "@dazn", "id": "UCdi3n18zcIZeTk_x9qvSgZw", "name": "DAZN", "speed": 1 },
+  { "handle": "@daznde", "id": "UC-XArLCeEw91r9gmaDi-Ajw", "name": "DAZN DE", "speed": 1 },
+  { "handle": "@rtlsport", "id": "UC8WYi3XQXsf-6FNvqoEvxag", "name": "RTL Sport", "speed": 1 },
+  { "handle": "@primevideosportde", "id": "UCK2izXoHvraUFaPMU5B7vMQ", "name": "Prime Video Sport", "speed": 1 },
+  { "handle": "@eurosportdeutschland", "id": "UCk452F_ypT9Q8b1S38-Ok8A", "name": "Eurosport Deutschland", "speed": 1 },
+  { "handle": "@sport1", "id": "UCPj_Vtw0hKnhJapQuATBUrA", "name": "SPORT1", "speed": 1 },
+  { "handle": "@ransport", "id": "UCiMAc_TN1kSO3ErMtxUXfMA", "name": "ran", "speed": 1 },
+  { "handle": "@kicker", "id": "UCQEHrmmI8kKJ6kAiQdQUjgg", "name": "kicker", "speed": 1 },
+  { "handle": "@magentasport", "id": "UChr7ZXDFiPOEl543HM4Aj8g", "name": "Magenta Sport", "speed": 1 },
+  { "handle": "@nfl", "id": "UCDVYQ4Zhbm3S2dlz7P1GBDg", "name": "NFL", "speed": 1 },
+  { "handle": "@nba", "id": "UCWJ2lWNubArHWmf3FIHbfcQ", "name": "NBA", "speed": 1 },
+  { "handle": "@motogp", "id": "UC8pYaQzbBBXg9GIOHRvTmDQ", "name": "MotoGP", "speed": 1 },
+  { "handle": "@formula1", "id": "UCB_qr75-ydFVKSF9Dmo6izg", "name": "Formula 1", "speed": 1 },
+  { "handle": "@bundesliga", "id": "UC6UL29enLNe4mqwTfAyeNuw", "name": "Bundesliga", "speed": 1 },
+  { "handle": "@dfb", "id": "UCfMo0xj-sbdzHuzxvKdu1hw", "name": "DFB", "speed": 1 },
+  { "handle": "@uefa", "id": "UCyGa1YEx9ST66rYrJTGIKOw", "name": "UEFA", "speed": 1 }
+]

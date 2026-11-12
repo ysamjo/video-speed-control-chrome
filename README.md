@@ -2,7 +2,7 @@
 
 Portierung des Userscripts „Video Speed Control with Keyboard" als Chrome-Erweiterung (Manifest V3).
 
-## Kanalvorgaben und manuelles Tempo (2026.11.3)
+## Kanalvorgaben und manuelles Tempo (2026.11.4)
 
 Klick auf das Erweiterungssymbol öffnet die Verwaltung. Unter **Standardgeschwindigkeit pro Kanal** lassen sich Kanäle hinzufügen, bearbeiten und entfernen. Trage vorzugsweise den **@Handle** (z. B. `@sportstudio`) oder den vollständigen YouTube-Kanal-Link ein, wähle das Tempo und klicke auf **Einstellungen speichern**. Auch Kanal-IDs und exakte Anzeigenamen sind möglich; Handles und IDs vermeiden Verwechslungen bei gleichen Namen. Beim Speichern eines neuen Kanal-Links werden Handle und Kanal-ID einmalig über die öffentliche YouTube-Kanalseite abgeglichen; ein Server oder API-Schlüssel ist nicht nötig.
 
@@ -11,6 +11,7 @@ Klick auf das Erweiterungssymbol öffnet die Verwaltung. Unter **Standardgeschwi
 - Kanalregeln erkennen den Kanal des tatsächlich abgespielten Videos auf Watch-, Live-, Shorts-, mobilen und eingebetteten YouTube-Seiten. Bei gemeinsamen Uploads ohne Owner-Link werden die öffentlichen YouTube-Videodaten einmalig abgerufen, um den veröffentlichenden Hauptkanal zu ermitteln. Videotitel, Empfehlungen und Suchparameter lösen keine Kanalregel aus.
 - Kanal- und Kids-Regeln bestimmen das Starttempo. **Manuelle Änderungen per S / D / R oder über das Player-Menü gelten nur für das aktuelle Video.** Pausieren, Fortsetzen und Spulen behalten diese Auswahl. **Beim nächsten Video gilt wieder die passende Kanal-/Kids-Regel oder das globale Standardtempo**, auch wenn YouTube das Videoelement wiederverwendet. Gespeicherte Vorgaben bleiben unverändert; dauerhafte Änderungen erfolgen ausschließlich in den Einstellungen.
 - Ohne Treffer gilt das Standardtempo; Kanalregeln haben Vorrang vor bisherigen URL-Regeln. Innerhalb einer Regelart gewinnt die erste passende Regel. Individuelle alte URL-Regeln bleiben erhalten; der alte Beispielwert `sport = 1.1` wird durch `@sportstudio = 1.0` ersetzt. Änderungen greifen nach dem Speichern auch in offenen Tabs.
+- **Diagnose:** Die Optionsseite zeigt unter **Erkannter Kanal** für alle offenen YouTube-Tabs den erkannten Kanal, die greifende Regel und das aktuelle Tempo. So lässt sich prüfen, ob Handle, Alias oder Sonderfall korrekt erkannt werden.
 
 Das alte Userscript in Tampermonkey/Violentmonkey für diese Websites deaktivieren, damit nicht zwei Geschwindigkeitssteuerungen gegeneinander arbeiten.
 
@@ -40,6 +41,7 @@ Das alte Userscript in Tampermonkey/Violentmonkey für diese Websites deaktivier
 | `manifest.json` | Manifest V3 (Content Scripts, Optionsseite, Storage) |
 | `content.js` | Geschwindigkeitssteuerung + konfigurierbare Hotkeys + Kino-Modus (YouTube-Theatermodus) |
 | `rules.js` | Gemeinsame Kanalnormalisierung, Owner-Erkennung und Regelpriorität |
+| `channels.json` | Kanonischer Kanal-Katalog; `test/channel-catalog.test.js` gleicht `rules.js` dagegen ab |
 | `content-redirect.js` | Entwirrt Redirect-Links und überspringt Redirect-Seiten |
 | `watch-later.js` | Räumt `youtube.com/playlist?list=WL` auf: breite Liste, Papierkorb pro Eintrag |
 | `background.js` | Öffnet die Einstellungen beim Toolbar-Klick |
@@ -59,10 +61,13 @@ npm test          # oder direkt: node test/run.js
 npm run build     # ZIP: dist/video-speed-control-2026.11.4.zip
 ```
 
+GitHub Actions führt bei Push auf `main` und bei Pull Requests `npm test` und `npm run build` aus (`.github/workflows/ci.yml`).
+
 | Datei | Prüft |
 | --- | --- |
 | `test/harness.js` | Sandbox, Fake-Video mit echtem `ratechange`-Verhalten, Toast- und Storage-Mitschnitt |
 | `test/rules.test.js` | Kanal-Link-/ID-Normalisierung, gültige Geschwindigkeiten, Migration und Regelpriorität |
+| `test/channel-catalog.test.js` | `channels.json` gegen `rules.js` und (falls vorhanden) gegen die Morphe-TV-Vorgaben |
 | `test/channel-speed.test.js` | Kanalvorgaben und YouTube Kids: Hotkeys, Player-Änderungen, verzögerte Owner, SPA-Wechsel und Live-Einstellungen |
 | `test/hotkey-guard.test.js` | Hotkeys greifen nicht in Eingabefelder ein (inkl. `contenteditable`, Shadow DOM, Seiten ohne Video) |
 | `test/toggle.test.js` | Umschalten 1,00× ↔ gespeichert; Toast und tatsächliche Rate stimmen überein; Player-Overrides werden mit der *gewünschten* Rate bekämpft |

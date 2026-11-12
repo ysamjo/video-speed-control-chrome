@@ -134,10 +134,98 @@ $('reset').addEventListener('click', async () => {
     showStatus('Standard wiederhergestellt: sportstudio 1,0×, YouTube Kids 1,0×, sonst 1,8×; Kino-Modus und Später-ansehen-Aufräumer an.')
   } catch (e) { showError(`Zurücksetzen fehlgeschlagen: ${e.message}`) }
 })
+const isYouTubeUrl = url => {
+  try {
+    const host = new URL(url).hostname
+    return /(^|\.)youtube(-nocookie)?\.com$/.test(host) || /(^|\.)youtubekids\.com$/.test(host)
+  } catch { return false }
+}
+const formatRate = value => value == null ? '–' : `${String(Math.round(value * 100) / 100).replace('.', ',')}×`
+const ruleLabel = rule => {
+  if (!rule) return 'unbekannt'
+  if (rule.key === 'global') return `Standardtempo (${formatRate(rule.rate)})`
+  if (rule.key === 'kids') return `YouTube Kids (${formatRate(rule.rate)})`
+  if (rule.key.startsWith('channel:')) return `Kanalregel ${rule.key.slice(8)} (${formatRate(rule.rate)})`
+  if (rule.key.startsWith('url:')) return `URL-Regel ${rule.key.slice(4)} (${formatRate(rule.rate)})`
+  return `${rule.key} (${formatRate(rule.rate)})`
+}
+const channelLabel = data => {
+  if (data.channelName) return data.channelName
+  const key = (data.channels || []).find(value => !value.startsWith('channel/'))
+  return key || (data.channels || [])[0] || 'nicht erkannt'
+}
+const addDiagnosisRow = (list, term, value) => {
+  const dt = document.createElement('dt')
+  dt.textContent = term
+  const dd = document.createElement('dd')
+  dd.textContent = value
+  list.append(dt, dd)
+}
+const renderDiagnosis = results => {
+  const box = $('diagnose-result')
+  box.replaceChildren()
+  if (!results.length) {
+    const empty = document.createElement('p')
+    empty.className = 'hint'
+    empty.textContent = 'Keine offenen YouTube-Tabs gefunden. Öffne ein YouTube-Video und prüfe erneut.'
+    box.append(empty)
+    return
+  }
+  for (const { tab, data, error } of results) {
+    const card = document.createElement('article')
+    card.className = 'diagnose-card'
+    const title = document.createElement('h3')
+    title.textContent = data?.title || tab.title || tab.url || 'YouTube-Tab'
+    card.append(title)
+    if (error || !data) {
+      const message = document.createElement('p')
+      message.className = 'hint'
+      message.textContent = error || 'Keine Antwort vom Tab.'
+      card.append(message)
+      box.append(card)
+      continue
+    }
+    const list = document.createElement('dl')
+    addDiagnosisRow(list, 'Kanal', channelLabel(data))
+    addDiagnosisRow(list, 'Regel', ruleLabel(data.rule))
+    addDiagnosisRow(list, 'Aktuelles Tempo', `${formatRate(data.currentRate)}${data.manual ? ' (manuell für dieses Video)' : ''}`)
+    addDiagnosisRow(list, 'Standardtempo', formatRate(data.storedSpeed))
+    addDiagnosisRow(list, 'YouTube Kids', data.kids ? 'ja' : 'nein')
+    card.append(list)
+    box.append(card)
+  }
+}
+const diagnoseTabs = async () => {
+  const box = $('diagnose-result')
+  const status = document.createElement('p')
+  status.className = 'hint'
+  status.textContent = 'Prüfe offene YouTube-Tabs …'
+  box.replaceChildren(status)
+  let tabs
+  try {
+    tabs = (await chrome.tabs.query({})).filter(tab => tab.id != null && isYouTubeUrl(tab.url))
+  } catch (e) {
+    renderDiagnosis([{ tab: {}, data: null, error: `Tabs konnten nicht gelesen werden: ${e.message}` }])
+    return
+  }
+  const results = await Promise.all(tabs.map(async tab => {
+    try {
+      const response = await chrome.tabs.sendMessage(tab.id, { type: 'VSC_DIAGNOSE' }, { frameId: 0 })
+      return { tab, data: response?.ok ? response.data : null, error: response?.error || null }
+    } catch {
+      return { tab, data: null, error: 'Erweiterung auf diesem Tab nicht aktiv – Seite neu laden.' }
+    }
+  }))
+  renderDiagnosis(results)
+}
+
+$('diagnose').addEventListener('click', diagnoseTabs)
+
 const load = async () => {
   try {
     render(await chrome.storage.sync.get(DEFAULTS))
     $('settings-fields').disabled = false
   } catch (e) { showError(`Einstellungen konnten nicht geladen werden: ${e.message}`) }
+  diagnoseTabs()
 }
 load()

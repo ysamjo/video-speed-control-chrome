@@ -1,6 +1,6 @@
 # Chrome Web Store – Video Speed Control with Keyboard
 
-Stand: 2026-11-02. Version 2026.11.3 ist für lokale Installation vorbereitet; keine Store-Einreichung vorgenommen.
+Stand: 2026-11-12. Version 2026.11.4 ist für lokale Installation vorbereitet; keine Store-Einreichung vorgenommen.
 
 ## Store-Eintrag
 
@@ -10,7 +10,7 @@ Kurzbeschreibung: Videotempo pro Kanal und YouTube Kids vorgeben und für einzel
 
 Beschreibung: Steuere die Geschwindigkeit von HTML-Videos mit frei wählbaren Tasten. Verwalte Startvorgaben für einzelne YouTube-Kanäle. sportstudio spielt standardmäßig mit 1,0-facher Geschwindigkeit; YouTube Kids startet auf Wunsch jedes Video mit 1,0×. Du kannst das Tempo im laufenden Video per Hotkey oder im Player überschreiben; beim nächsten Video gilt wieder die Vorgabe. Pausieren und Spulen behalten deine aktuelle Auswahl. Ohne Ausnahme gilt dein gespeichertes Standardtempo. Optional bleibt auf YouTube der Kino-Modus aktiv. Bekannte Redirect-Zwischenseiten externer Links werden übersprungen.
 
-Bedienung: Erweiterungssymbol anklicken, Kanal hinzufügen, Tempo eintragen und Einstellungen speichern.
+Bedienung: Erweiterungssymbol anklicken, Kanal hinzufügen, Tempo eintragen und Einstellungen speichern. Unter „Erkannter Kanal“ zeigt die Optionsseite für offene YouTube-Tabs den erkannten Kanal, die greifende Regel und das aktuelle Tempo.
 
 Kategorie: Productivity. Sprache: Deutsch.
 

@@ -57,7 +57,7 @@ function load({ initial = 1.8, withVideo = true, storedSpeed = 1.8, deferSetting
   theaterButton = true, applyTheaterOnClick = true, channel = null, channelName = '',
   channelRules, kids = true, ownerVideoId = null, ancestorOrigins = [], collab = false, metadata } = {}) {
   const winListeners = {}
-  const created = [], saved = [], storageListeners = [], pendingGets = [], observers = []
+  const created = [], saved = [], storageListeners = [], pendingGets = [], observers = [], messageListeners = []
   const storage = { playbackSpeed: storedSpeed, cinemaMode: cinema, youtubeKidsNormalSpeed: kids }
   const requests = []
   if (channelRules !== undefined) storage.channelSpeeds = channelRules
@@ -131,7 +131,10 @@ function load({ initial = 1.8, withVideo = true, storedSpeed = 1.8, deferSetting
         },
         onChanged: { addListener: fn => storageListeners.push(fn) },
       },
-      runtime: { lastError: null },
+      runtime: {
+        lastError: null,
+        onMessage: { addListener: fn => messageListeners.push(fn) },
+      },
     },
   })
 
@@ -176,6 +179,11 @@ function load({ initial = 1.8, withVideo = true, storedSpeed = 1.8, deferSetting
     },
     toast: () => created.filter(e => /^\d+\.\d\d$/.test(e.textContent)).pop()?.textContent ?? null,
     savedSpeed: () => storage.playbackSpeed,
+    diagnose: () => {
+      let response
+      for (const fn of messageListeners) fn({ type: 'VSC_DIAGNOSE' }, {}, value => { response = value })
+      return response
+    },
     // Kino-Modus: YouTube-Zustand steuern und gemeldete DOM-Änderungen auslösen.
     theaterOn: () => theaterAttrs.has('theater'),
     setTheater: (on) => { if (on) theaterAttrs.add('theater'); else theaterAttrs.delete('theater') },

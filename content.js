@@ -393,12 +393,55 @@ const speedControl = (() => {
     }
   }
 
+  const ownerLabel = () => {
+    const selectors = location.pathname.startsWith('/shorts/')
+      ? ['ytd-reel-video-renderer[is-active] #channel-name a[href]', 'ytd-reel-video-renderer[is-active] a.yt-simple-endpoint[href^="/@"]']
+      : location.pathname.startsWith('/embed/')
+        ? ['.ytp-title-channel-name[href]']
+        : ['ytd-watch-flexy #owner ytd-channel-name a[href]', 'ytd-watch-flexy #upload-info a[href]', 'ytm-video-owner-renderer a[href]', 'ytm-slim-owner-renderer a[href]']
+    for (const selector of selectors) {
+      for (const link of document.querySelectorAll(selector)) {
+        const name = String(link?.textContent || link?.getAttribute?.('aria-label') || '').trim()
+        if (name) return name
+      }
+    }
+    return ''
+  }
+
+  // Liefert der Optionsseite den erkannten Kanal und die aktuell greifende Regel.
+  const diagnose = () => {
+    const active = video && video.isConnected !== false ? video : findVideo()
+    const state = active ? videoStates.get(active) : null
+    return {
+      url: location.href,
+      title: document.title || '',
+      youtube: isYouTube(location.hostname),
+      kids: isKids(location.hostname) || kidsContext,
+      channels: readChannel(document, location),
+      channelName: ownerLabel(),
+      rule: context(),
+      currentRate: active ? active.playbackRate : null,
+      storedSpeed: speed,
+      manual: !!state?.manual,
+    }
+  }
+
+  const listenForDiagnosis = () => {
+    if (typeof chrome === 'undefined' || !chrome.runtime?.onMessage?.addListener) return
+    chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+      if (message?.type !== 'VSC_DIAGNOSE') return
+      try { sendResponse({ ok: true, data: diagnose() }) }
+      catch (error) { sendResponse({ ok: false, error: String(error?.message || error) }) }
+    })
+  }
+
   const init = () => {
     // window + capture + document-start: läuft vor den eigenen Handlern der Seite.
     on(window, ['keydown', 'keypress', 'keyup'], onKey, true)
     on(window, ['pointerdown', 'click', 'input', 'change', 'keydown'], onPlayerControl, true)
     on(document, MEDIA_EVENTS, onMedia, true)
 
+    listenForDiagnosis()
     loadSettings()
     observeContext()
   }
