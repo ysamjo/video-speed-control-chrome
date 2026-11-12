@@ -17,7 +17,6 @@
     { type: 'channel', pattern: '@ransport', aliases: ['channel/UCiMAc_TN1kSO3ErMtxUXfMA'], speed: 1 },
     { type: 'channel', pattern: '@kicker', aliases: ['channel/UCQEHrmmI8kKJ6kAiQdQUjgg'], speed: 1 },
     { type: 'channel', pattern: '@skysportaustria', aliases: ['channel/UC5dCegXiWjE57wKrhWnCo0g'], speed: 1 },
-    { type: 'channel', pattern: '@skysportnewshd', aliases: ['channel/UC1a3OGagvVFWPK1NAI0PcMQ'], speed: 1 },
     { type: 'channel', pattern: '@magentasport', aliases: ['channel/UChr7ZXDFiPOEl543HM4Aj8g'], speed: 1 },
     { type: 'channel', pattern: '@motogp', aliases: ['channel/UC8pYaQzbBBXg9GIOHRvTmDQ'], speed: 1 },
     { type: 'channel', pattern: '@formula1', aliases: ['channel/UCB_qr75-ydFVKSF9Dmo6izg'], speed: 1 },
