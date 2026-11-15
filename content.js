@@ -60,6 +60,26 @@ const toast = (() => {
   return { show }
 })()
 
+/** YouTube blendet bei Wiedergabestörungen einen dauerhaften Hinweis ein („Kommt es zu Unterbrechungen?“). */
+const hintCleaner = (() => {
+  const TEXT = /kommt es zu unterbrechungen|experiencing interruptions/i
+  const SELECTOR = 'tp-yt-paper-toast, yt-notification-action-renderer, ytd-popup-container > *'
+  let timer = null
+  const clean = () => {
+    timer = null
+    for (const node of document.querySelectorAll(SELECTOR)) {
+      if (!TEXT.test(node.textContent || '')) continue
+      node.style.setProperty('display', 'none', 'important')
+    }
+  }
+  const schedule = () => { if (!timer) timer = setTimeout(clean, 300) }
+  if (VSC_RULES.isYouTube(location.hostname)) {
+    new MutationObserver(schedule).observe(document.documentElement, { childList: true, subtree: true })
+    schedule()
+  }
+  return { clean, schedule }
+})()
+
 const speedControl = (() => {
   const SPEED_KEY = 'playbackSpeed'
   const HOTKEYS_KEY = 'hotkeys'

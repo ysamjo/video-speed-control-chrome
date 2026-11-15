@@ -48,14 +48,14 @@ function makeVideo(initial) {
 
 const makeEl = (over = {}) => Object.assign({
   localName: 'div', isContentEditable: false, textContent: '',
-  style: { setProperty() {} }, setAttribute() {}, removeAttribute() {}, remove() {},
+  style: { props: {}, setProperty(k, v) { this.props[k] = v } }, setAttribute() {}, removeAttribute() {}, remove() {},
   matches: () => false, showPopover() {}, append() {}, querySelectorAll: () => [],
 }, over)
 
 function load({ initial = 1.8, withVideo = true, storedSpeed = 1.8, deferSettings = false,
   cinema = true, hostname = 'example.com', pathname = '/', theater = false,
   theaterButton = true, applyTheaterOnClick = true, channel = null, channelName = '',
-  channelRules, kids = true, ownerVideoId = null, ancestorOrigins = [], collab = false, metadata } = {}) {
+  channelRules, kids = true, ownerVideoId = null, ancestorOrigins = [], collab = false, metadata, toasts = [] } = {}) {
   const winListeners = {}
   const created = [], saved = [], storageListeners = [], pendingGets = [], observers = [], messageListeners = []
   const storage = { playbackSpeed: storedSpeed, cinemaMode: cinema, youtubeKidsNormalSpeed: kids }
@@ -103,6 +103,7 @@ function load({ initial = 1.8, withVideo = true, storedSpeed = 1.8, deferSetting
     querySelectorAll: selector => {
       if (selector === 'video') return withVideo ? [video] : []
       if (channel && /#owner|#upload-info|reel-video-renderer|ytm-.*owner|ytp-title-channel/.test(selector)) return [owner]
+      if (toasts.length && selector.includes('tp-yt-paper-toast')) return toasts
       return []
     },
     createElement: () => { const el = makeEl(); created.push(el); return el },
@@ -139,7 +140,7 @@ function load({ initial = 1.8, withVideo = true, storedSpeed = 1.8, deferSetting
   })
 
   return {
-    winListeners, video, saved, document, location, requests,
+    winListeners, video, saved, document, location, requests, toasts,
     finishSettings: () => pendingGets.splice(0).forEach(run => run()),
     advance: (ms) => { fakeNow += ms },
     // Dokument-Capture und Zielphase teilen EIN Event; Shadow DOM verlässt nur die Zielphase.
