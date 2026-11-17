@@ -18,7 +18,12 @@ function load({ list = 'WL', hostname = 'www.youtube.com', pathname = '/playlist
     const children = []
     const node = Object.assign({
       localName, children, dataset: {}, style: { props: {}, setProperty(k, v) { this.props[k] = v } },
-      attributes: {}, classList: { add() {} }, textContent: '',
+      attributes: {}, textContent: '',
+      classList: {
+        add(...names) { const set = new Set(String(node.className || '').split(/\s+/).filter(Boolean)); names.forEach(n => set.add(n)); node.className = [...set].join(' ') },
+        remove(...names) { const set = new Set(String(node.className || '').split(/\s+/).filter(Boolean)); names.forEach(n => set.delete(n)); node.className = [...set].join(' ') },
+        contains(name) { return String(node.className || '').split(/\s+/).includes(name) },
+      },
       append(...nodes) { for (const n of nodes) { children.push(n); n.parent = node } },
       // setAttribute/append arbeiten auf live-Objekten; `attributes` bleibt trotzdem nutzbar.
       insertBefore(n) { children.unshift(n); n.parent = node; return n },
@@ -36,6 +41,7 @@ function load({ list = 'WL', hostname = 'www.youtube.com', pathname = '/playlist
       querySelector(selector) {
         if (selector === 'ytd-menu-renderer, #menu') return children.find(c => c.localName === 'ytd-menu-renderer') ?? null
         if (selector === '.vpc-remove') return children.find(c => c.className === 'vpc-remove') ?? null
+        if (selector === 'a[href]') return children.find(c => c.localName === 'a' && c.attributes.href) ?? null
         // Drei-Punkte-Menü: der echte YouTube-Knopf; sein Fehlen sperrt den Papierkorb nicht.
         if (selector.startsWith('ytd-menu-renderer')) {
           // Knopf liegt in der Menüleiste des Eintrags, nicht direkt darin.
@@ -43,6 +49,10 @@ function load({ list = 'WL', hostname = 'www.youtube.com', pathname = '/playlist
           return menu?.children.find(c => c.localName === 'yt-icon-button') ?? null
         }
         return null
+      },
+      querySelectorAll(selector) {
+        if (selector === '[data-vpc-play-bar]') return children.filter(c => c.attributes['data-vpc-play-bar'])
+        return []
       },
     }, extra)
     return node
@@ -71,10 +81,20 @@ function load({ list = 'WL', hostname = 'www.youtube.com', pathname = '/playlist
 
 
   const primary = el('div')
+  // Playlist-Karte: enthält den Wiedergabe-Menüknoten, der über die Liste wandern soll.
+  const playLink = el('a', { attributes: { href: '/watch?v=abc&list=WL' } })
+  const playMenu = el('div', { className: 'play-menu spaced-row wide-screen-form' })
+  playMenu.append(playLink)
+  const header = el('div')
+  header.append(playMenu)
   const document = {
     documentElement: el('html'), head: el('head'),
     querySelector(selector) {
       if (selector === 'ytd-browse[page-subtype="playlist"] #primary') return primary
+      if (selector === 'ytd-two-column-browse-results-renderer #primary') return primary
+      if (selector === 'ytd-playlist-header-renderer .play-menu.wide-screen-form') return header.children.includes(playMenu) ? playMenu : null
+      if (selector === 'ytd-playlist-header-renderer') return header
+      if (selector === '[data-vpc-play-bar]') return primary.children.find(c => c.attributes['data-vpc-play-bar']) ?? null
       if (selector === '.vpc-remove') return listItems.map(i => i.children[0].children[0]).find(n => n?.className === 'vpc-remove') ?? null
       return null
     },
@@ -124,7 +144,7 @@ function load({ list = 'WL', hostname = 'www.youtube.com', pathname = '/playlist
   })
 
   return {
-    document, primary, listItems, menuItem, storage,
+    document, primary, listItems, menuItem, storage, playMenu, header,
     removed: () => removed,
     // stop() räumt über diese Selektor-Liste ab: Anzahl der gefundenen Buttons mitschreiben.
     removeButtonsCalled: () => removeQueries,
@@ -147,6 +167,8 @@ async function run() {
     s.check('Liste nutzt die volle Breite', env.primaryWidth(), 'none')
     s.check('Jeder Eintrag bekommt einen Papierkorb', env.buttons().length, 2)
     s.check('Papierkorb hat zugängliche Beschriftung', env.buttons()[0].getAttribute('aria-label'), 'Aus „Später ansehen“ entfernen')
+    s.check('Wiedergabe-Leiste steht über der Liste', env.primary.children[0], env.playMenu)
+    s.check('…und ist als Leiste markiert', env.playMenu.classList.contains('vpc-play-bar'), true)
     await tick(300)
     env.mutate()
     await tick(300)
@@ -196,6 +218,7 @@ async function run() {
     await tick(300)
     env.changeEnabled(false)
     s.check('Abschalten entfernt den Style', env.styleInserted(), false)
+    s.check('Abschalten hängt die Wiedergabe-Leiste zurück', env.header.children.includes(env.playMenu), true)
     // stop() löscht alle vorhandenen Papierkörbe (hier je Eintrag einer).
     s.check('Abschalten entfernt die Papierkörbe', env.removeButtonsCalled() > 0, true)
     env.changeEnabled(true)

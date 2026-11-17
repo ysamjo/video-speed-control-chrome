@@ -1,6 +1,7 @@
 // watch-later.js
 // „Später ansehen“ (youtube.com/playlist?list=WL) aufräumen:
-// 1. Die Playlist-Karte (linke Spalte) wird ausgeblendet und die Liste nimmt die volle Breite ein.
+// 1. Die Playlist-Karte (linke Spalte) wird ausgeblendet, ihre Wiedergabe-Leiste über die
+//    Liste gesetzt und die Liste nimmt die volle Breite ein.
 // 2. Jedes Listenelement bekommt einen Papierkorb-Button, der es ohne Umweg über das
 //    Drei-Punkte-Menü entfernt.
 //
@@ -13,23 +14,34 @@ const log = (...args) => console.info('%cVPC', 'color:grey', ...args)
 const watchLater = (() => {
   const KEY = 'watchLaterCleanup'
   const MARK = 'data-vpc-remove'
+  const PLAY_BAR = 'data-vpc-play-bar'
   // Menüpunkte, die entfernen – deutsche und englische Oberfläche. Anführungszeichen
   // (typografisch oder gerade) und Zusätze wie „(Watch Later)“ werden vorher entfernt.
   const REMOVE_TEXT = /^(?:aus\s*(?:„|“|")?später ansehen(?:„|“|")?\s*entfernen|remove from\s*(?:„|“|")?(?:watch later|später ansehen)(?:„|“|")?)$/i
   const STYLE_ID = 'vpc-watch-later-style'
   const CSS = `
-    /* Die linke Playlist-Spalte zeigt nur die (eine) Wiedergabeliste – Platzverschwendung. */
-    ytd-playlist-video-list-renderer #header-description,
-    ytd-playlist-panel-renderer { display: none !important; }
+    /* Die linke Playlist-Karte (Titel, Cover, Statistik) kostet nur Platz – weg damit.
+       Die Wiedergabe-Leiste wird per JS über die Liste gesetzt. */
+    ytd-playlist-header-renderer,
+    ytd-playlist-sidebar-renderer,
+    ytd-playlist-panel-renderer,
+    ytd-playlist-video-list-renderer #header-description { display: none !important; }
+    /* YouTube reserviert links den Platz für die feste Karte – ohne Karte volle Breite. */
+    ytd-two-column-browse-results-renderer { padding-left: 0 !important; }
+    /* Wiedergabe/Zufallsmix über der Liste (verschobener Menüknoten der Karte). */
+    #primary > .vpc-play-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 16px; }
     /* Hinweise wie „Kommt es zu Unterbrechungen?“ (Alters-/Regionssperre) blähen die Einträge auf. */
     ytd-playlist-video-renderer #description,
     ytd-playlist-video-renderer .ytd-video-primary-info-renderer,
     ytd-playlist-video-renderer ytd-badge-supported-renderer { display: none !important; }
     /* Papierkorb im Menü des Listeneintrags: gleiche Fläche wie die Drei-Punkte-Schaltfläche. */
+    /* Farbe erben: YouTubes Theme-Variablen sind hier nicht definiert, ein fester
+       Fallback wäre im Dark Mode unsichtbar. „inherit“ trifft exakt die Farbe der
+       benachbarten Drei-Punkte-Schaltfläche. */
     .vpc-remove { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px;
-      padding: 0; border: 0; border-radius: 50%; background: transparent; color: var(--yt-spec-text-primary, #0f0f0f);
+      padding: 0; border: 0; border-radius: 50%; background: transparent; color: inherit;
       cursor: pointer; opacity: 0.7; }
-    .vpc-remove:hover { background: var(--yt-spec-badge-chip-background, rgba(0, 0, 0, .05)); opacity: 1; }
+    .vpc-remove:hover { background: rgba(128, 128, 128, .2); opacity: 1; }
     .vpc-remove:focus-visible { outline: 2px solid var(--yt-spec-call-to-action, #065fd4); outline-offset: 1px; }
     .vpc-remove svg { width: 24px; height: 24px; }
     .vpc-remove[aria-disabled="1"], .vpc-remove[data-busy] { opacity: 0.4; cursor: progress; }
@@ -122,12 +134,35 @@ const watchLater = (() => {
     return true
   }
 
+  /**
+   * „Alle abspielen“/„Zufallsmix“ aus der ausgeblendeten Playlist-Karte über die Liste
+   * setzen. Der Knoten wird verschoben statt geklont: ein Klon verliert beim erneuten
+   * Upgrade den gerenderten Button-Inhalt. Rendert YouTube die Karte neu, wird der neue
+   * Menüknoten beim nächsten Tick wieder nach oben geholt.
+   */
+  const ensurePlayBar = () => {
+    const primary = document.querySelector('ytd-two-column-browse-results-renderer #primary')
+    if (!primary) return false
+    const source = document.querySelector('ytd-playlist-header-renderer .play-menu.wide-screen-form')
+      ?? document.querySelector('ytd-playlist-header-renderer .play-menu')
+    if (!source) return false
+    const href = source.querySelector('a[href]')?.getAttribute('href')
+    if (!href) return false
+    for (const bar of primary.querySelectorAll(`[${PLAY_BAR}]`)) bar.remove()
+    source.classList.remove('wide-screen-form', 'small-screen-form')
+    source.classList.add('vpc-play-bar')
+    source.setAttribute(PLAY_BAR, href)
+    primary.insertBefore(source, primary.firstChild ?? null)
+    return true
+  }
+
   const decorate = () => {
     let added = 0
     for (const item of document.querySelectorAll('ytd-playlist-video-renderer')) {
       // Eingehängte Buttons gehen beim Neu-Rendern verloren – deshalb ist addButton idempotent.
       if (addButton(item)) added++
     }
+    ensurePlayBar()
     return added
   }
 
@@ -169,13 +204,27 @@ const watchLater = (() => {
     schedule()
   }
 
+  /** Beim Abschalten die Wiedergabe-Leiste zurück in die Playlist-Karte hängen. */
+  const restorePlayBar = () => {
+    const bar = document.querySelector(`[${PLAY_BAR}]`)
+    if (!bar) return
+    bar.classList.remove('vpc-play-bar')
+    bar.classList.add('wide-screen-form')
+    bar.removeAttribute(PLAY_BAR)
+    const wrapper = document.querySelector('ytd-playlist-header-renderer .metadata-wrapper')
+      ?? document.querySelector('ytd-playlist-header-renderer')
+    wrapper?.append(bar)
+  }
+
   const stop = () => {
     running = false
     clearTimeout(timer)
     timer = null
     observer?.disconnect()
+    restorePlayBar()
     removeStyle()
     for (const button of document.querySelectorAll(`[${MARK}]`)) button.remove()
+    for (const bar of document.querySelectorAll(`[${PLAY_BAR}]`)) bar.remove()
   }
 
   /** Einmalige Direktprüfung ohne Warteschleife – auch für Tests nutzbar. */
