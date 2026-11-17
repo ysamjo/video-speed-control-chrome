@@ -63,7 +63,10 @@ const toast = (() => {
 /** YouTube blendet bei Wiedergabestörungen einen dauerhaften Hinweis ein („Kommt es zu Unterbrechungen?“). */
 const hintCleaner = (() => {
   const TEXT = /kommt es zu unterbrechungen|experiencing interruptions/i
-  const SELECTOR = 'tp-yt-paper-toast, yt-notification-action-renderer, ytd-popup-container > *'
+  // YouTube hat Toasts auf `snackbar-container` umgestellt (web_toast_to_snackbar_migration).
+  // Dort wird pro Einblendung ein neuer Wrapper gerendert – ihn ausblenden, nicht den Container,
+  // sonst blieben auch spätere Hinweise unsichtbar.
+  const SELECTOR = 'tp-yt-paper-toast, yt-notification-action-renderer, ytd-popup-container > *, snackbar-container .ytSnackbarContainerSnackbarContainer'
   let timer = null
   const clean = () => {
     timer = null
@@ -74,7 +77,7 @@ const hintCleaner = (() => {
   }
   const schedule = () => { if (!timer) timer = setTimeout(clean, 300) }
   if (VSC_RULES.isYouTube(location.hostname)) {
-    new MutationObserver(schedule).observe(document.documentElement, { childList: true, subtree: true })
+    new MutationObserver(schedule).observe(document.documentElement, { childList: true, subtree: true, characterData: true })
     schedule()
   }
   return { clean, schedule }

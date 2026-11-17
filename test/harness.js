@@ -55,7 +55,7 @@ const makeEl = (over = {}) => Object.assign({
 function load({ initial = 1.8, withVideo = true, storedSpeed = 1.8, deferSettings = false,
   cinema = true, hostname = 'example.com', pathname = '/', theater = false,
   theaterButton = true, applyTheaterOnClick = true, channel = null, channelName = '',
-  channelRules, kids = true, ownerVideoId = null, ancestorOrigins = [], collab = false, metadata, toasts = [] } = {}) {
+  channelRules, kids = true, ownerVideoId = null, ancestorOrigins = [], collab = false, metadata, toasts = [], snackbars = [] } = {}) {
   const winListeners = {}
   const created = [], saved = [], storageListeners = [], pendingGets = [], observers = [], messageListeners = []
   const storage = { playbackSpeed: storedSpeed, cinemaMode: cinema, youtubeKidsNormalSpeed: kids }
@@ -104,6 +104,7 @@ function load({ initial = 1.8, withVideo = true, storedSpeed = 1.8, deferSetting
       if (selector === 'video') return withVideo ? [video] : []
       if (channel && /#owner|#upload-info|reel-video-renderer|ytm-.*owner|ytp-title-channel/.test(selector)) return [owner]
       if (toasts.length && selector.includes('tp-yt-paper-toast')) return toasts
+      if (snackbars.length && selector.includes('snackbar-container')) return snackbars
       return []
     },
     createElement: () => { const el = makeEl(); created.push(el); return el },

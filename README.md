@@ -26,7 +26,7 @@ Das alte Userscript in Tampermonkey/Violentmonkey für diese Websites deaktivier
 - **Kino-Modus immer aktiv (YouTube)**: Auf Watch- und Live-Seiten (`youtube.com/watch`, `/live/…`) wird der **Theatermodus** automatisch eingeschalten – der Player wird breit, aber nicht vollbild. Erkennung über `ytd-watch-flexy[theater]`, Umschalten über den `.ytp-size-button` (Fallback: Button-Text in lokaler Sprache). Wird der Modus von YouTube zurückgesetzt oder manuell ausgeschaltet, wird er nachgesetzt (MutationObserver + `yt-navigate-finish` decken YouTubes SPA-Navigation ab, 250 ms Debounce und 0,9 s Schutzfrist verhindern Hin-und-Her-Klicken). In den Einstellungen abschaltbar, Standard: **an**.
 - **Später ansehen aufräumen** (`youtube.com/playlist?list=WL`): Die linke Wiedergabelisten-Spalte verschwindet, die Liste nutzt die volle Breite, und die Hinweise wie „Kommt es zu Unterbrechungen?“ werden ausgeblendet. Jeder Eintrag bekommt links neben dem Drei-Punkte-Menü einen **Papierkorb**, der das Video ohne Umweg über das Menü aus „Später ansehen“ entfernt (nutzt YouTubes eigenen Menüpunkt, löscht also nur den Listeneintrag, nicht das Video). In den Einstellungen abschaltbar, Standard: **an**.
 - Kurzer Toast oben rechts zeigt die aktuelle Geschwindigkeit (funktioniert auch im Vollbild).
-- YouTubes Hinweis-Toast „Kommt es zu Unterbrechungen?“ („Experiencing interruptions?“) wird auf YouTube-Seiten ausgeblendet.
+- YouTubes Hinweis „Kommt es zu Unterbrechungen?“ („Experiencing interruptions?“) wird auf YouTube-Seiten ausgeblendet – in der alten Toast- und der neuen Snackbar-Darstellung.
 - **Redirect-Seiten überspringen**: Externe Links, die über bekannte Weiterleitungs-Interstitials laufen, werden direkt zum Ziel geführt – beim Klick (href wird entwirrt, gilt auch für „in neuem Tab öffnen") und als Fallback beim Laden der Redirect-Seite selbst. Abgedeckt: Google `/url?q=`, Bing `/ck/a`, Facebook `l.php`, Instagram `l.instagram.com`, Steam `linkfilter`, DuckDuckGo `uddg`, Reddit `out.reddit.com`, X/Twitter `/i/redirect`, `href.li`.
 
 ## Installation (Chrome / Edge / Brave)
@@ -59,7 +59,7 @@ das 1,5-s-Enforce-Fenster über eine steuerbare Uhr sowie YouTubes Watch-Contain
 
 ```sh
 npm test          # oder direkt: node test/run.js
-npm run build     # ZIP: dist/video-speed-control-2026.11.5.zip
+npm run build     # ZIP: dist/video-speed-control-2026.11.6.zip
 ```
 
 GitHub Actions führt bei Push auf `main` und bei Pull Requests `npm test` und `npm run build` aus (`.github/workflows/ci.yml`).

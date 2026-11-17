@@ -26,6 +26,16 @@ async function run() {
   }
 
   {
+    // YouTube rendert Toasts seit der Snackbar-Migration in `snackbar-container`.
+    const hint = makeEl({ localName: 'div', textContent: 'Kommt es zu Unterbrechungen?' })
+    const other = makeEl({ localName: 'div', textContent: 'Video zu „Später ansehen“ hinzugefügt' })
+    load({ hostname: 'www.youtube.com', pathname: '/watch', snackbars: [hint, other] })
+    await tick(400)
+    s.check('Hinweis in der neuen Snackbar wird ausgeblendet', hidden(hint), true)
+    s.check('Andere Snackbars bleiben sichtbar', hidden(other), false)
+  }
+
+  {
     // Außerhalb von YouTube bleibt fremdes DOM unangetastet.
     const hint = toast('Kommt es zu Unterbrechungen?')
     load({ hostname: 'example.com', toasts: [hint] })
