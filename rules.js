@@ -7,6 +7,7 @@
     { type: 'channel', pattern: '@skysport', aliases: ['channel/UCAvNr5DMVncoJnJAotXOjOQ'], speed: 1 },
     { type: 'channel', pattern: '@skysportde', aliases: ['channel/UCuOwl-VgqBHOzR8hWnonBcA'], speed: 1 },
     { type: 'channel', pattern: '@skysportaustria', aliases: ['channel/UC5dCegXiWjE57wKrhWnCo0g'], speed: 1 },
+    { type: 'channel', pattern: '@skysportpremierleague', aliases: ['channel/UC_VsQmcsFWUhGn3DTwiO8bg'], speed: 1 },
     { type: 'channel', pattern: '@dazn', aliases: ['channel/UCdi3n18zcIZeTk_x9qvSgZw'], speed: 1 },
     { type: 'channel', pattern: '@daznde', aliases: ['channel/UC-XArLCeEw91r9gmaDi-Ajw'], speed: 1 },
     { type: 'channel', pattern: '@daznfussball', aliases: ['channel/UClBFnQJMlinWDCvfSXj60CA'], speed: 1 },
