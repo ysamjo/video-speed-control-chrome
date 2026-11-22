@@ -4,7 +4,7 @@
   { "handle": "@skysport", "id": "UCAvNr5DMVncoJnJAotXOjOQ", "name": "Sky Sport", "speed": 1 },
   { "handle": "@skysportde", "id": "UCuOwl-VgqBHOzR8hWnonBcA", "name": "Sky Sport DE", "speed": 1 },
   { "handle": "@skysportaustria", "id": "UC5dCegXiWjE57wKrhWnCo0g", "name": "Sky Sport Austria", "speed": 1 },
-  { "handle": "@SkySportPremierLeague", "id": "UC_VsQmcsFWUhGn3DTwiO8bg", "name": "Sky Sport Premier League", "speed": 1 },
+  { "handle": "@skysportpremierleague", "id": "UC_VsQmcsFWUhGn3DTwiO8bg", "name": "Sky Sport Premier League", "speed": 1 },
   { "handle": "@dazn", "id": "UCdi3n18zcIZeTk_x9qvSgZw", "name": "DAZN", "speed": 1 },
   { "handle": "@daznde", "id": "UC-XArLCeEw91r9gmaDi-Ajw", "name": "DAZN DE", "speed": 1 },
   { "handle": "@daznfussball", "id": "UClBFnQJMlinWDCvfSXj60CA", "name": "DAZN Fußball", "speed": 1 },
