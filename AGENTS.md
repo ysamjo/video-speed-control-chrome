@@ -2,7 +2,7 @@
 
 ## Projekt-Kontext
 - Chrome-Erweiterung (Manifest V3) zur Steuerung der Abspielgeschwindigkeit von HTML-Videos per Hotkey.
-- Kanalvorgaben für YouTube (Standard 1,0× für 21 Sportkanäle), YouTube Kids 1,0×, Kino-Modus und „Später ansehen“-Aufräumer.
+- Kanalvorgaben für YouTube (Standard 1,0× für 22 Sportkanäle), YouTube Kids 1,0×, Kino-Modus und „Später ansehen“-Aufräumer.
 - Kein Build-Schritt für die Erweiterung: `manifest.json` lädt die Dateien direkt; `npm run build` erzeugt nur das Store-ZIP.
 - Schwestersystem: `../morphe-patches` (YouTube-TV-Patch) nutzt denselben Kanal-Katalog.
 
