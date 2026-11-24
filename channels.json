@@ -51,5 +51,6 @@
   {"handle": "@letourdefrance", "id": "UCSpycUnuU0IVF7gGIhGojhg", "name": "Tour de France", "speed": 1},
   {"handle": "@giroditalia", "id": "UCe10BxbsFg9Kbmkg-ean_Dg", "name": "Giro d'Italia", "speed": 1},
   {"handle": "@sportbuzzer", "id": "UCgl60be0ucr6WdpHqG6EA7A", "name": "Sportbuzzer", "speed": 1},
-  {"handle": "@transfermarkt", "id": "UCRfs7Y0wWMjl4pmdvEQgjVA", "name": "Transfermarkt", "speed": 1}
+  {"handle": "@transfermarkt", "id": "UCRfs7Y0wWMjl4pmdvEQgjVA", "name": "Transfermarkt", "speed": 1},
+  {"handle": "@daznuefachampionsleague", "id": "UCB-GdMjyokO9lZkKU_oIK6g", "name": "DAZN UEFA Champions League", "speed": 1}
 ]

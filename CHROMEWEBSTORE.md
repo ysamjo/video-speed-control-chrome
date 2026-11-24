@@ -43,7 +43,7 @@ Aktuell: entpackte lokale Erweiterung und ZIP. Store-Sichtbarkeit und Regionen n
 
 | Version | Datum | Änderung | Status |
 | --- | --- | --- | --- |
-| 2026.11.8 | 2026-11-24 | 30 weitere Sportkanäle mit 1,0× (HBL, easyCredit BBL, PENNY DEL, ServusTV, PDC, Premier League, LALIGA, Serie A, Ligue 1, Sky Sports, TNT Sports, ESPN, FIFA, Olympia, ATP/Wimbledon/US Open/Roland-Garros/Australian Open, MLB, NHL, UFC, NASCAR, IndyCar, WRC, Tour de France, Giro, Sportbuzzer, Transfermarkt) | Lokal vorbereitet |
+| 2026.11.8 | 2026-11-24 | 31 weitere Sportkanäle mit 1,0× (DAZN UEFA Champions League, HBL, easyCredit BBL, PENNY DEL, ServusTV, PDC, Premier League, LALIGA, Serie A, Ligue 1, Sky Sports, TNT Sports, ESPN, FIFA, Olympia, ATP/Wimbledon/US Open/Roland-Garros/Australian Open, MLB, NHL, UFC, NASCAR, IndyCar, WRC, Tour de France, Giro, Sportbuzzer, Transfermarkt) | Lokal vorbereitet |
 | 2026.11.7 | 2026-11-24 | S und D merken das Tempo nach 500 ms als neues Standardtempo (chrome.storage.sync); R und Player-Menü bleiben temporär | Lokal vorbereitet |
 | 2026.11.3 | 2026-11-02 | Temporäre manuelle Auswahl per Hotkey/Player, Rückkehr zur Vorgabe beim nächsten Video, Einstellungen bleiben unverändert | Lokal vorbereitet |
 | 2026.11.2 | 2026-11-02 | Feste Kanalregeln, sportstudio 1,0×, YouTube Kids 1,0×, Kanalverwaltung, SPA-Wechsel und Live-Übernahme | Lokal vorbereitet |

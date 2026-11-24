@@ -6,8 +6,8 @@ Portierung des Userscripts „Video Speed Control with Keyboard" als Chrome-Erwe
 
 Klick auf das Erweiterungssymbol öffnet die Verwaltung. Unter **Standardgeschwindigkeit pro Kanal** lassen sich Kanäle hinzufügen, bearbeiten und entfernen. Trage vorzugsweise den **@Handle** (z. B. `@sportstudio`) oder den vollständigen YouTube-Kanal-Link ein, wähle das Tempo und klicke auf **Einstellungen speichern**. Auch Kanal-IDs und exakte Anzeigenamen sind möglich; Handles und IDs vermeiden Verwechslungen bei gleichen Namen. Beim Speichern eines neuen Kanal-Links werden Handle und Kanal-ID einmalig über die öffentliche YouTube-Kanalseite abgeglichen; ein Server oder API-Schlüssel ist nicht nötig.
 
-- **1,0× voreingestellt** für 53 Sportkanäle (jeweils mit Kanal-ID als Alias, damit auch Umbenennungen des Handles greifen):
-  - **Deutsche Sender:** `@sportstudio`, `@sportschau`, `@skysport`, `@skysportde`, `@skysportaustria`, `@skysportpremierleague`, `@dazn`, `@daznde`, `@daznfussball`, `@rtlsport`, `@primevideosportde`, `@eurosportdeutschland`, `@sport1`, `@ransport`, `@kicker`, `@magentasport`, `@servustv`, `@sportbuzzer`, `@transfermarkt`
+- **1,0× voreingestellt** für 54 Sportkanäle (jeweils mit Kanal-ID als Alias, damit auch Umbenennungen des Handles greifen):
+  - **Deutsche Sender:** `@sportstudio`, `@sportschau`, `@skysport`, `@skysportde`, `@skysportaustria`, `@skysportpremierleague`, `@dazn`, `@daznde`, `@daznfussball`, `@daznuefachampionsleague`, `@rtlsport`, `@primevideosportde`, `@eurosportdeutschland`, `@sport1`, `@ransport`, `@kicker`, `@magentasport`, `@servustv`, `@sportbuzzer`, `@transfermarkt`
   - **Deutsche Ligen und Verbände:** `@bundesliga`, `@dfb`, `@hbl`, `@basketballbundesliga`, `@pennydel`, `@officialpdc`, `@teamdeutschland`
   - **Internationale Ligen und Wettbewerbe:** `@uefa`, `@premierleague`, `@laliga`, `@seriea`, `@ligue1`, `@fifa`, `@olympics`, `@skysports`, `@tntsports`, `@espn`
   - **US-Sport:** `@nfl`, `@nba`, `@mlb`, `@nhl`, `@ufc`, `@nascar`, `@indycar`
