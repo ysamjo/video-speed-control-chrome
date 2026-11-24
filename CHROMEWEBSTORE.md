@@ -8,7 +8,7 @@ Name: Video Speed Control with Keyboard
 
 Kurzbeschreibung: Videotempo pro Kanal und YouTube Kids vorgeben und für einzelne Videos manuell überschreiben.
 
-Beschreibung: Steuere die Geschwindigkeit von HTML-Videos mit frei wählbaren Tasten. Verwalte Startvorgaben für einzelne YouTube-Kanäle. sportstudio spielt standardmäßig mit 1,0-facher Geschwindigkeit; YouTube Kids startet auf Wunsch jedes Video mit 1,0×. Du kannst das Tempo im laufenden Video per Hotkey oder im Player überschreiben; beim nächsten Video gilt wieder die Vorgabe. Pausieren und Spulen behalten deine aktuelle Auswahl. Ohne Ausnahme gilt dein gespeichertes Standardtempo. Optional bleibt auf YouTube der Kino-Modus aktiv. Bekannte Redirect-Zwischenseiten externer Links werden übersprungen.
+Beschreibung: Steuere die Geschwindigkeit von HTML-Videos mit frei wählbaren Tasten. Verwalte Startvorgaben für einzelne YouTube-Kanäle. sportstudio spielt standardmäßig mit 1,0-facher Geschwindigkeit; YouTube Kids startet auf Wunsch jedes Video mit 1,0×. Du kannst das Tempo im laufenden Video per Hotkey oder im Player überschreiben; mit S und D wird es als neues Standardtempo gemerkt, R schaltet nur vorübergehend auf 1,0×. Pausieren und Spulen behalten deine aktuelle Auswahl. Kanal- und Kids-Vorgaben haben weiterhin Vorrang. Optional bleibt auf YouTube der Kino-Modus aktiv. Bekannte Redirect-Zwischenseiten externer Links werden übersprungen.
 
 Bedienung: Erweiterungssymbol anklicken, Kanal hinzufügen, Tempo eintragen und Einstellungen speichern. Unter „Erkannter Kanal“ zeigt die Optionsseite für offene YouTube-Tabs den erkannten Kanal, die greifende Regel und das aktuelle Tempo.
 

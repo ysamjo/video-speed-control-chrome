@@ -92,6 +92,7 @@ const speedControl = (() => {
   const MIN = 0.25, MAX = 10, STEP = 0.1, TOGGLE_LOW = 1
   const { DEFAULT_CHANNEL_RULES, normalizeRules, readChannel, resolve, mediaKey, isYouTube, isKids, channelKey } = VSC_RULES
   const ENFORCE_MS = 1500   // begrenzter Schutz nach Hotkey, Skip und Wiederaufnahme
+  const SAVE_DELAY_MS = 500 // träge schreiben: chrome.storage.sync begrenzt Schreibvorgänge pro Minute
   const MEDIA_EVENTS = ['play', 'playing', 'seeking', 'seeked', 'loadedmetadata']
   const MAX_RESTORES = 10   // Sicherheitsnetz gegen Endlosgefechte mit dem Player
   const ACTIONS = {
@@ -107,6 +108,8 @@ const speedControl = (() => {
   let navigating = false
   let contextTimer
   let settingsLoaded = false
+  let saveTimer
+  let lastSaved = null
   let video
   const channelMetadata = new Map()
   // Auswahl und Schutz gehören zum jeweiligen Video, nicht zum zuletzt aktiven Player.
@@ -152,6 +155,22 @@ const speedControl = (() => {
   const sourceKey = v => `${mediaKey(location)}${isYouTube(location.hostname) && /^\/(watch|shorts\/|live\/)/.test(location.pathname)
     ? '' : `|${v.currentSrc || v.src || ''}`}`
 
+  /** Tastenschritte dauerhaft als Standardtempo merken (nicht: R auf 1,00× und Vorgaben). */
+  const persistSpeed = (value) => {
+    clearTimeout(saveTimer)
+    saveTimer = setTimeout(() => {
+      saveTimer = null
+      // Gleicher Wert bereits gespeichert – z. B. weil ein anderer Tab ihn gesetzt hat.
+      if (Math.abs(value - speed) < 0.005) return
+      lastSaved = value
+      try {
+        chrome.storage.sync.set({ [SPEED_KEY]: value }, () => {
+          if (chrome.runtime.lastError) log('Tempo nicht gespeichert', chrome.runtime.lastError)
+        })
+      } catch (e) { log('Kein Zugriff auf chrome.storage – Tempo nicht gespeichert', e) }
+    }, SAVE_DELAY_MS)
+  }
+
   const loadSettings = () => {
     try {
       chrome.storage.sync.get({ [SPEED_KEY]: 1.8, [HOTKEYS_KEY]: DEFAULT_HOTKEYS, [CHANNEL_RULES_KEY]: DEFAULT_CHANNEL_RULES, [KIDS_KEY]: true }, (res) => {
@@ -166,11 +185,18 @@ const speedControl = (() => {
       // Änderungen aus der Einstellungsseite (oder anderen Tabs) live übernehmen.
       chrome.storage.onChanged.addListener((changes, area) => {
         if (area !== 'sync') return
-        if (changes[SPEED_KEY]?.newValue != null) speed = clamp(Number(changes[SPEED_KEY].newValue) || 1)
+        let ownSave = false
+        if (changes[SPEED_KEY]?.newValue != null) {
+          speed = clamp(Number(changes[SPEED_KEY].newValue) || 1)
+          // Selbst geschriebenes Tempo nicht als externe Änderung behandeln: das
+          // erzwungene refreshContext(true) würde die gerade gewählte Rate kassieren.
+          ownSave = lastSaved !== null && Math.abs(speed - lastSaved) < 0.005
+          if (ownSave) lastSaved = null
+        }
         if (changes[HOTKEYS_KEY]?.newValue) hotkeys = { ...DEFAULT_HOTKEYS, ...changes[HOTKEYS_KEY].newValue }
         if (changes[CHANNEL_RULES_KEY]?.newValue != null) channelRules = normalizeRules(changes[CHANNEL_RULES_KEY].newValue)
         if (changes[KIDS_KEY]) kids = changes[KIDS_KEY].newValue !== false
-        if (changes[SPEED_KEY] || changes[CHANNEL_RULES_KEY] || changes[KIDS_KEY]) refreshContext(true)
+        if ((changes[SPEED_KEY] && !ownSave) || changes[CHANNEL_RULES_KEY] || changes[KIDS_KEY]) refreshContext(true)
       })
     } catch (e) {
       log('Kein Zugriff auf chrome.storage – nutze Defaults', e)
@@ -243,6 +269,7 @@ const speedControl = (() => {
     state.policyKey = policy.key
     state.policyRate = policy.rate
     if (reset || remember) state.stepRate = value
+    if (remember && settingsLoaded) persistSpeed(value)
     if (reset && manualIntent?.video === v) manualIntent = null
     state.manual = reset ? false : state.manual || userAction
     state.enforceUntil = Date.now() + ENFORCE_MS

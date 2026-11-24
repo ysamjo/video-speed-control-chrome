@@ -22,7 +22,7 @@ async function run() {
     env.navigate('/watch?v=next')
     env.media('loadedmetadata')
     s.check(`${options.hostname || 'global'}: Wiederverwendeter Player mit neuer Video-ID`, env.video.playbackRate, preset)
-    s.check(`${options.hostname || 'global'}: Keine gespeicherte Vorgabe geändert`, env.saved.length, 0)
+    s.check(`${options.hostname || 'global'}: Innerhalb der Wartefrist nichts gespeichert`, env.saved.length, 0)
   }
   {
     const env = load(YT)

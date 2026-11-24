@@ -90,7 +90,9 @@ async function run() {
     press(env.winListeners, 's')
     await tick()
     s.check('S ändert nur das laufende Video', env.video.playbackRate, 1.7)
-    s.check('S verändert das Standardtempo nicht', env.savedSpeed(), 1.8)
+    s.check('S schreibt nicht sofort in den Speicher', env.savedSpeed(), 1.8)
+    await tick(600)
+    s.check('S merkt 1,70 als neues Standardtempo', env.savedSpeed(), 1.7)
   }
 
   {

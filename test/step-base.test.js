@@ -1,5 +1,5 @@
 // Schrittweite bleibt unabhängig von automatischen Player-Resets und R.
-// Manuelle Änderungen gelten nur für das aktuelle Video; Vorgaben bleiben unverändert.
+// Tastenschritte merken das Tempo als neues Standardtempo; Details in save-speed.
 const { load, press, tick, suite } = require('./harness')
 async function run() {
   const s = suite()
@@ -9,7 +9,7 @@ async function run() {
     press(env.winListeners, 'd'); await tick()
     s.check('D ignoriert automatischen Player-Reset', env.video.playbackRate, 1.9)
     s.check('Toast zeigt die tatsächliche Auswahl', env.toast(), '1.90')
-    s.check('Standardtempo bleibt 1,8×', env.savedSpeed(), 1.8)
+    s.check('Player-Reset allein schreibt kein Standardtempo', env.saved.length, 0)
   }
   {
     const env = load()
@@ -28,10 +28,12 @@ async function run() {
     press(env.winListeners, 'd'); await tick()
     press(env.winListeners, 'd'); await tick()
     s.check('Zwei Schritte ab 1,8× ergeben 2,0×', env.video.playbackRate, 2)
-    s.check('Hotkeys schreiben keine Vorgaben in Storage', env.saved.length, 0)
+    await tick(600)
+    s.check('Zwei Schritte schreiben 2,00 als Standardtempo', env.savedSpeed(), 2)
+    env.changeStoredSpeed(2)
     env.navigate('/next-video')
     env.media('loadedmetadata')
-    s.check('Neues Video nutzt wieder 1,8×', env.video.playbackRate, 1.8)
+    s.check('Neues Video startet mit 2,0×', env.video.playbackRate, 2)
   }
   return s.report()
 }
