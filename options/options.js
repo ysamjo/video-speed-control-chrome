@@ -11,6 +11,7 @@ const DEFAULTS = {
 const FIELDS = ['decrease', 'increase', 'toggle']
 const $ = id => document.getElementById(id)
 let rowId = 0
+let dirty = false // ungespeicherte Eingaben nicht durch Live-Änderungen aus anderen Tabs überschreiben
 
 const clearError = () => { $('error').hidden = true }
 const showError = (message, field) => {
@@ -116,6 +117,7 @@ const save = async event => {
       if (rule.type === 'channel' && !rule.aliases.length) rule.aliases = await resolveAliases(rule.pattern)
     }
     await chrome.storage.sync.set({ hotkeys, playbackSpeed: speed, channelSpeeds: rules, youtubeKidsNormalSpeed: $('kids').checked, cinemaMode: $('cinema').checked, watchLaterCleanup: $('watch-later').checked })
+    dirty = false
     // Nach erfolgreicher Auflösung Aliasse behalten, auch wenn die Seite offen bleibt.
     ;[...$('channels').children].forEach((row, index) => { row.savedPattern = rules[index].pattern; row.aliases = rules[index].aliases })
     showStatus('Gespeichert – gilt ab sofort in allen Tabs.')
@@ -124,12 +126,13 @@ const save = async event => {
 }
 
 $('settings').addEventListener('submit', save)
-$('settings').addEventListener('input', () => { clearError(); showStatus('Änderungen noch nicht gespeichert.') })
+$('settings').addEventListener('input', () => { dirty = true; clearError(); showStatus('Änderungen noch nicht gespeichert.') })
 $('add-channel').addEventListener('click', () => { addRule(undefined, true); showStatus('Änderungen noch nicht gespeichert.') })
 $('reset').addEventListener('click', async () => {
   clearError()
   try {
     await chrome.storage.sync.set(DEFAULTS)
+    dirty = false
     render(DEFAULTS)
     showStatus('Standard wiederhergestellt: sportstudio 1,0×, YouTube Kids 1,0×, sonst 1,8×; Kino-Modus und Später-ansehen-Aufräumer an.')
   } catch (e) { showError(`Zurücksetzen fehlgeschlagen: ${e.message}`) }
@@ -221,9 +224,21 @@ const diagnoseTabs = async () => {
 
 $('diagnose').addEventListener('click', diagnoseTabs)
 
+// S/D im Video schreibt direkt in chrome.storage.sync. Eine bereits offene
+// Einstellungsseite muss das übernehmen, sonst würde ihr alter Wert beim nächsten
+// Speichern das neue Standardtempo überschreiben.
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area !== 'sync' || dirty || changes.playbackSpeed?.newValue == null) return
+  const value = validSpeed(changes.playbackSpeed.newValue)
+  if (value === null || validSpeed($('speed').value) === value) return
+  $('speed').value = value
+  showStatus(`Standardtempo aus einem anderen Tab übernommen: ${formatRate(value)}.`)
+})
+
 const load = async () => {
   try {
     render(await chrome.storage.sync.get(DEFAULTS))
+    dirty = false
     $('settings-fields').disabled = false
   } catch (e) { showError(`Einstellungen konnten nicht geladen werden: ${e.message}`) }
   diagnoseTabs()

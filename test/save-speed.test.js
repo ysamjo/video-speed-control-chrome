@@ -69,6 +69,22 @@ async function run() {
     await tick(SAVE_WAIT)
     s.check('Ohne geladene Einstellungen wird nichts gespeichert', env.saved.length, 0)
   }
+  {
+    // Neuladen/Tab-Schließen vor Ablauf der 500 ms darf den letzten Schritt nicht verlieren.
+    const env = load()
+    press(env.winListeners, 'd')
+    s.check('Vor pagehide noch nicht geschrieben', env.saved.length, 0)
+    ;(env.winListeners.pagehide || []).forEach(fn => fn({ type: 'pagehide' }))
+    s.check('pagehide schreibt das ausstehende Tempo sofort', env.savedSpeed(), 1.9)
+    s.check('pagehide schreibt genau einmal', env.saved.length, 1)
+  }
+  {
+    const env = load()
+    press(env.winListeners, 'd'); await tick()
+    press(env.winListeners, 's')
+    ;(env.winListeners.pagehide || []).forEach(fn => fn({ type: 'pagehide' }))
+    s.check('pagehide schreibt die Rückkehr zum Ausgangswert nicht', env.saved.length, 0)
+  }
   return s.report()
 }
 module.exports = { run }

@@ -109,6 +109,7 @@ const speedControl = (() => {
   let contextTimer
   let settingsLoaded = false
   let saveTimer
+  let pendingSpeed = null
   let lastSaved = null
   let video
   const channelMetadata = new Map()
@@ -156,19 +157,37 @@ const speedControl = (() => {
     ? '' : `|${v.currentSrc || v.src || ''}`}`
 
   /** Tastenschritte dauerhaft als Standardtempo merken (nicht: R auf 1,00× und Vorgaben). */
+  const writeSpeed = (value) => {
+    // Gleicher Wert bereits gespeichert – z. B. weil ein anderer Tab ihn gesetzt hat.
+    if (Math.abs(value - speed) < 0.005) return
+    lastSaved = value
+    try {
+      chrome.storage.sync.set({ [SPEED_KEY]: value }, () => {
+        if (chrome.runtime.lastError) log('Tempo nicht gespeichert', chrome.runtime.lastError)
+      })
+    } catch (e) { log('Kein Zugriff auf chrome.storage – Tempo nicht gespeichert', e) }
+  }
+
   const persistSpeed = (value) => {
     clearTimeout(saveTimer)
+    pendingSpeed = value
     saveTimer = setTimeout(() => {
       saveTimer = null
-      // Gleicher Wert bereits gespeichert – z. B. weil ein anderer Tab ihn gesetzt hat.
-      if (Math.abs(value - speed) < 0.005) return
-      lastSaved = value
-      try {
-        chrome.storage.sync.set({ [SPEED_KEY]: value }, () => {
-          if (chrome.runtime.lastError) log('Tempo nicht gespeichert', chrome.runtime.lastError)
-        })
-      } catch (e) { log('Kein Zugriff auf chrome.storage – Tempo nicht gespeichert', e) }
+      flushSpeed()
     }, SAVE_DELAY_MS)
+  }
+
+  // Beim Neuladen/Tab-Schließen würde der ausstehende Timeout sonst verfallen und
+  // der letzte S/D-Schritt wäre nach dem Laden wieder weg.
+  const flushSpeed = () => {
+    if (saveTimer != null) {
+      clearTimeout(saveTimer)
+      saveTimer = null
+    }
+    if (pendingSpeed == null) return
+    const value = pendingSpeed
+    pendingSpeed = null
+    writeSpeed(value)
   }
 
   const loadSettings = () => {
@@ -490,6 +509,10 @@ const speedControl = (() => {
     on(window, ['keydown', 'keypress', 'keyup'], onKey, true)
     on(window, ['pointerdown', 'click', 'input', 'change', 'keydown'], onPlayerControl, true)
     on(document, MEDIA_EVENTS, onMedia, true)
+    on(window, ['pagehide'], flushSpeed)
+    on(document, ['visibilitychange'], () => {
+      if (document.visibilityState === 'hidden') flushSpeed()
+    })
 
     listenForDiagnosis()
     loadSettings()
