@@ -1,14 +1,14 @@
 # Chrome Web Store – Video Speed Control with Keyboard
 
-Stand: 2026-11-24. Version 2026.11.8 ist für lokale Installation vorbereitet; keine Store-Einreichung vorgenommen.
+Stand: 2026-11-25. Version 2026.11.9 ist für lokale Installation vorbereitet; keine Store-Einreichung vorgenommen.
 
 ## Store-Eintrag
 
 Name: Video Speed Control with Keyboard
 
-Kurzbeschreibung: Videotempo pro Kanal und YouTube Kids vorgeben und für einzelne Videos manuell überschreiben.
+Kurzbeschreibung: Videotempo pro Kanal und YouTube Kids vorgeben, einzelne Videos manuell überschreiben und YouTube immer dunkel nutzen.
 
-Beschreibung: Steuere die Geschwindigkeit von HTML-Videos mit frei wählbaren Tasten. Verwalte Startvorgaben für einzelne YouTube-Kanäle. sportstudio spielt standardmäßig mit 1,0-facher Geschwindigkeit; YouTube Kids startet auf Wunsch jedes Video mit 1,0×. Du kannst das Tempo im laufenden Video per Hotkey oder im Player überschreiben; mit S und D wird es als neues Standardtempo gemerkt, R schaltet nur vorübergehend auf 1,0×. Pausieren und Spulen behalten deine aktuelle Auswahl. Kanal- und Kids-Vorgaben haben weiterhin Vorrang. Optional bleibt auf YouTube der Kino-Modus aktiv. Bekannte Redirect-Zwischenseiten externer Links werden übersprungen.
+Beschreibung: Steuere die Geschwindigkeit von HTML-Videos mit frei wählbaren Tasten. Verwalte Startvorgaben für einzelne YouTube-Kanäle. sportstudio spielt standardmäßig mit 1,0-facher Geschwindigkeit; YouTube Kids startet auf Wunsch jedes Video mit 1,0×. Du kannst das Tempo im laufenden Video per Hotkey oder im Player überschreiben; mit S und D wird es als neues Standardtempo gemerkt, R schaltet nur vorübergehend auf 1,0×. Pausieren und Spulen behalten deine aktuelle Auswahl. Kanal- und Kids-Vorgaben haben weiterhin Vorrang. YouTube wird immer in seiner eigenen Dunkelansicht angezeigt, ohne Bilder oder Videos zu invertieren. Optional bleibt auf YouTube der Kino-Modus aktiv. Bekannte Redirect-Zwischenseiten externer Links werden übersprungen.
 
 Bedienung: Erweiterungssymbol anklicken, Kanal hinzufügen, Tempo eintragen und Einstellungen speichern. Unter „Erkannter Kanal“ zeigt die Optionsseite für offene YouTube-Tabs den erkannten Kanal, die greifende Regel und das aktuelle Tempo.
 
@@ -43,6 +43,7 @@ Aktuell: entpackte lokale Erweiterung und ZIP. Store-Sichtbarkeit und Regionen n
 
 | Version | Datum | Änderung | Status |
 | --- | --- | --- | --- |
+| 2026.11.9 | 2026-11-25 | YouTube immer in der nativen Dunkelansicht; vorhandene Vorgaben bleiben erhalten, andere Websites unverändert | Lokal vorbereitet |
 | 2026.11.8 | 2026-11-24 | 31 weitere Sportkanäle mit 1,0× (DAZN UEFA Champions League, HBL, easyCredit BBL, PENNY DEL, ServusTV, PDC, Premier League, LALIGA, Serie A, Ligue 1, Sky Sports, TNT Sports, ESPN, FIFA, Olympia, ATP/Wimbledon/US Open/Roland-Garros/Australian Open, MLB, NHL, UFC, NASCAR, IndyCar, WRC, Tour de France, Giro, Sportbuzzer, Transfermarkt) | Lokal vorbereitet |
 | 2026.11.7 | 2026-11-24 | S und D merken das Tempo nach 500 ms als neues Standardtempo (chrome.storage.sync); R und Player-Menü bleiben temporär | Lokal vorbereitet |
 | 2026.11.3 | 2026-11-02 | Temporäre manuelle Auswahl per Hotkey/Player, Rückkehr zur Vorgabe beim nächsten Video, Einstellungen bleiben unverändert | Lokal vorbereitet |

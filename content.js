@@ -83,6 +83,40 @@ const hintCleaner = (() => {
   return { clean, schedule }
 })()
 
+const youtubeDarkMode = (() => {
+  const ensurePreference = () => {
+    const match = document.cookie.match(/(?:^|;\s*)PREF=([^;]*)/)
+    const current = match?.[1] || ''
+    if (current.split('&').includes('f6=400')) return
+    const values = current.split('&').filter(value => value && !value.startsWith('f6='))
+    values.push('f6=400')
+    const domain = /(^|\.)youtube-nocookie\.com$/i.test(location.hostname) ? '.youtube-nocookie.com' : '.youtube.com'
+    document.cookie = `PREF=${values.join('&')}; path=/; domain=${domain}; max-age=31536000; Secure; SameSite=Lax`
+  }
+
+  const ensure = () => {
+    if (!VSC_RULES.isYouTube(location.hostname)) return
+    ensurePreference()
+    const root = document.documentElement
+    if (root && !root.hasAttribute('dark')) root.setAttribute('dark')
+  }
+
+  const init = () => {
+    if (!VSC_RULES.isYouTube(location.hostname)) return
+    ensure()
+    document.addEventListener('yt-navigate-finish', ensure, true)
+    const startObserver = () => {
+      if (typeof MutationObserver !== 'function' || !document.documentElement) return
+      new MutationObserver(ensure).observe(document.documentElement, { attributes: true, attributeFilter: ['dark'] })
+    }
+    if (document.documentElement) startObserver()
+    else document.addEventListener('DOMContentLoaded', () => { ensure(); startObserver() }, { once: true })
+  }
+
+  init()
+  return { init }
+})()
+
 const speedControl = (() => {
   const SPEED_KEY = 'playbackSpeed'
   const HOTKEYS_KEY = 'hotkeys'

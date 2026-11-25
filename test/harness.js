@@ -46,23 +46,34 @@ function makeVideo(initial) {
   return v
 }
 
-const makeEl = (over = {}) => Object.assign({
-  localName: 'div', isContentEditable: false, textContent: '',
-  style: { props: {}, setProperty(k, v) { this.props[k] = v } }, setAttribute() {}, removeAttribute() {}, remove() {},
-  matches: () => false, showPopover() {}, append() {}, querySelectorAll: () => [],
-}, over)
+const makeEl = (over = {}) => {
+  const attrs = new Map()
+  return Object.assign({
+    localName: 'div', isContentEditable: false, textContent: '', attrs,
+    style: { props: {}, setProperty(k, v) { this.props[k] = v } },
+    setAttribute(name, value = '') { attrs.set(name, String(value)) },
+    getAttribute(name) { return attrs.get(name) ?? null },
+    hasAttribute(name) { return attrs.has(name) },
+    removeAttribute(name) { attrs.delete(name) },
+    remove() {},
+    matches: () => false, showPopover() {}, append() {}, querySelectorAll: () => [],
+  }, over)
+}
 
 function load({ initial = 1.8, withVideo = true, storedSpeed = 1.8, deferSettings = false,
   cinema = true, hostname = 'example.com', pathname = '/', theater = false,
   theaterButton = true, applyTheaterOnClick = true, channel = null, channelName = '',
-  channelRules, kids = true, ownerVideoId = null, ancestorOrigins = [], collab = false, metadata, toasts = [], snackbars = [] } = {}) {
+  channelRules, kids = true, ownerVideoId = null, ancestorOrigins = [], collab = false, metadata, toasts = [], snackbars = [],
+  initialPref = '', initialDark = false, deferRoot = false } = {}) {
   const winListeners = {}
   const created = [], saved = [], storageListeners = [], pendingGets = [], observers = [], messageListeners = []
   const storage = { playbackSpeed: storedSpeed, cinemaMode: cinema, youtubeKidsNormalSpeed: kids }
   const requests = []
   if (channelRules !== undefined) storage.channelSpeeds = channelRules
-  let fakeNow = 1000, theaterClicks = 0
+  let fakeNow = 1000, theaterClicks = 0, pref = initialPref
   const video = makeVideo(initial)
+  const root = makeEl({ localName: 'html' })
+  if (initialDark) root.setAttribute('dark')
 
   // YouTube-Fakes für den Kino-Modus (Theatermodus).
   const isYouTube = /(^|\.)youtube(-nocookie)?\.com$/.test(hostname)
@@ -91,7 +102,7 @@ function load({ initial = 1.8, withVideo = true, storedSpeed = 1.8, deferSetting
   const document = Object.assign(eventTarget(), {
     readyState: 'complete',
     body: makeEl({ localName: 'body' }),
-    documentElement: makeEl({ localName: 'html' }),
+    documentElement: deferRoot ? null : root,
     fullscreenElement: null,
     querySelector: (s) => {
       if (s === 'video') return withVideo ? video : null
@@ -110,6 +121,10 @@ function load({ initial = 1.8, withVideo = true, storedSpeed = 1.8, deferSetting
     createElement: () => { const el = makeEl(); created.push(el); return el },
   })
   const window = { addEventListener: (t, f) => (winListeners[t] ||= []).push(f), document }
+  Object.defineProperty(document, 'cookie', {
+    get: () => pref ? `PREF=${pref}` : '',
+    set(value) { pref = String(value).split(';')[0].replace(/^PREF=/, '') },
+  })
 
   vm.runInNewContext(`${rulesCode};\n${code}`, {
     document, window, console, setTimeout, clearTimeout, location, MutationObserver, URL, AbortSignal,
@@ -141,8 +156,10 @@ function load({ initial = 1.8, withVideo = true, storedSpeed = 1.8, deferSetting
   })
 
   return {
-    winListeners, video, saved, document, location, requests, toasts,
+    winListeners, video, saved, document, location, requests, toasts, root,
     finishSettings: () => pendingGets.splice(0).forEach(run => run()),
+    pref: () => pref,
+    attachRoot() { document.documentElement = root; document.dispatchEvent({ type: 'DOMContentLoaded' }) },
     advance: (ms) => { fakeNow += ms },
     // Dokument-Capture und Zielphase teilen EIN Event; Shadow DOM verlässt nur die Zielphase.
     media(type, target = video, { shadow = false } = {}) {

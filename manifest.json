@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Video Speed Control with Keyboard",
-  "version": "2026.11.8",
-  "description": "Videotempo pro Kanal und YouTube Kids vorgeben. Manuell für ein Video ändern; beim nächsten Video gilt wieder die Vorgabe.",
+  "version": "2026.11.9",
+  "description": "Videotempo pro Kanal und YouTube Kids vorgeben. YouTube immer in seiner nativen Dunkelansicht nutzen.",
   "author": "Vitus Schuhwerk",
   "license": "MIT",
   "permissions": ["storage"],
