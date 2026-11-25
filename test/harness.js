@@ -51,7 +51,10 @@ const makeEl = (over = {}) => {
   return Object.assign({
     localName: 'div', isContentEditable: false, textContent: '', attrs,
     style: { props: {}, setProperty(k, v) { this.props[k] = v } },
-    setAttribute(name, value = '') { attrs.set(name, String(value)) },
+    setAttribute(name, value) {
+      if (arguments.length < 2) throw new TypeError('Element.setAttribute requires two arguments')
+      attrs.set(name, String(value))
+    },
     getAttribute(name) { return attrs.get(name) ?? null },
     hasAttribute(name) { return attrs.has(name) },
     removeAttribute(name) { attrs.delete(name) },
@@ -73,7 +76,7 @@ function load({ initial = 1.8, withVideo = true, storedSpeed = 1.8, deferSetting
   let fakeNow = 1000, theaterClicks = 0, pref = initialPref
   const video = makeVideo(initial)
   const root = makeEl({ localName: 'html' })
-  if (initialDark) root.setAttribute('dark')
+  if (initialDark) root.setAttribute('dark', '')
 
   // YouTube-Fakes für den Kino-Modus (Theatermodus).
   const isYouTube = /(^|\.)youtube(-nocookie)?\.com$/.test(hostname)

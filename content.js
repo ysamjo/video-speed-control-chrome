@@ -98,7 +98,7 @@ const youtubeDarkMode = (() => {
     if (!VSC_RULES.isYouTube(location.hostname)) return
     ensurePreference()
     const root = document.documentElement
-    if (root && !root.hasAttribute('dark')) root.setAttribute('dark')
+    if (root && !root.hasAttribute('dark')) root.setAttribute('dark', '')
   }
 
   const init = () => {

@@ -30,6 +30,21 @@ async function run() {
   }
 
   {
+    const env = load({ ...YT })
+    env.document.cookie = 'PREF=f6=100'
+    env.root.removeAttribute('dark')
+    env.mutate()
+    s.check('Nach einer Theme-Rücksetzung bleibt YouTube dunkel', env.root.hasAttribute('dark'), true)
+    s.check('Nach einer Theme-Rücksetzung gilt wieder die Dunkelvorgabe', env.pref(), 'f6=400')
+  }
+
+  {
+    const env = load({ hostname: 'www.youtubekids.com', pathname: '/', initialPref: 'f6=100' })
+    s.check('YouTube Kids behält seine vorhandene Vorgabe', env.pref(), 'f6=100')
+    s.check('YouTube Kids wird nicht in den Dunkelmodus gezwungen', env.root.hasAttribute('dark'), false)
+  }
+
+  {
     const env = load({ ...YT, deferRoot: true })
     env.attachRoot()
     s.check('Dunkelansicht greift auch bei spät verfügbarem Dokument-Element', env.root.hasAttribute('dark'), true)
