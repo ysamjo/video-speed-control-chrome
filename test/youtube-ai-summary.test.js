@@ -44,6 +44,68 @@ async function run() {
     s.check('Zum Prüfen wird die Beschreibung kurz ausgeklappt', env.descriptionExpanded(), true)
     await tick(1100)
     s.check('Ohne native Zusammenfassung wird die Beschreibung wieder geschlossen', env.descriptionExpanded(), false)
+    env.mutate()
+    await flush()
+    s.check('Eine Mutation startet die Prüfung nicht erneut', env.descriptionExpanded(), false)
+    s.check('Beschreibung wird nur zum einmaligen Prüfen aus- und eingeklappt', env.descriptionClicks(), 2)
+  }
+
+  {
+    const env = load({ ...YT, pathname: '/watch?v=new', ownerVideoId: 'old', aiSummary: true, aiSummaryAvailable: false })
+    await flush()
+    s.check('Veralteter Watch-Container wird nicht für das neue Video benutzt', env.descriptionClicks(), 0)
+    env.replaceWatchPage({ videoId: 'new' })
+    env.mutate()
+    await flush()
+    s.check('Nach der Watch-ID-Aktualisierung wird das neue Video geprüft', env.descriptionExpanded(), true)
+    s.check('Erst der neue Watch-Container klappt die Beschreibung aus', env.descriptionClicks(), 1)
+    await tick(1100)
+    s.check('Die Prüfung des neuen Videos wird wieder zurückgeklappt', env.descriptionExpanded(), false)
+    s.check('Neues Video wird genau einmal aus- und eingeklappt', env.descriptionClicks(), 2)
+  }
+
+  {
+    const env = load({ ...YT, pathname: '/watch?v=old', ownerVideoId: 'old', aiSummary: true, aiSummaryAvailable: false })
+    await tick(300)
+    s.check('Prüfung des ersten Videos startet', env.descriptionExpanded(), true)
+    env.navigate('/watch?v=new')
+    env.replaceWatchPage({ videoId: 'new', descriptionExpanded: true })
+    env.mutate()
+    await tick(1300)
+    s.check('Alter Prüf-Timer schließt die Beschreibung des neuen Videos nicht', env.descriptionExpanded(), true)
+    s.check('Alter Prüf-Timer klickt keine Schaltfläche des neuen Videos', env.descriptionClicks(), 1)
+    env.mutate()
+    await flush()
+    s.check('Neue Watch-Seite bleibt nach ihrer Mutation unverändert', env.descriptionExpanded(), true)
+  }
+
+  {
+    const env = load({ ...YT, aiSummary: true, aiSummaryAvailable: false })
+    env.mutate()
+    await tick(200)
+    env.mutate()
+    await tick(100)
+    s.check('Laufende DOM-Mutationen verschieben die Prüfung nicht', env.descriptionExpanded(), true)
+  }
+
+  {
+    const env = load({ ...YT, aiSummary: true, aiSummaryAvailable: false })
+    await tick(300)
+    env.interactWithDescription('pointerdown')
+    await tick(1300)
+    s.check('Manuelle Beschreibungsinteraktion verhindert automatisches Rückklappen', env.descriptionExpanded(), true)
+    s.check('Nach manueller Interaktion wird kein Schließen angeklickt', env.descriptionClicks(), 1)
+  }
+
+  {
+    const env = load({ ...YT, aiSummary: true, aiSummaryAvailable: false })
+    await tick(300)
+    env.changeAiSummary(false)
+    await flush()
+    s.check('Ausschalten während der Prüfung stellt die Beschreibung wieder her', env.descriptionExpanded(), false)
+    env.mutate()
+    await flush()
+    s.check('Nach dem Ausschalten wird nicht erneut geprüft', env.descriptionClicks(), 2)
   }
 
   {

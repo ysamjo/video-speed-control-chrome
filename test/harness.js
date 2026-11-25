@@ -15,6 +15,7 @@ function eventTarget() {
       if (!listeners.has(type)) listeners.set(type, new Set())
       listeners.get(type).add(fn)
     },
+    removeEventListener(type, fn) { listeners.get(type)?.delete(fn) },
     dispatchEvent(event) {
       event.target ??= this
       event.currentTarget = this
@@ -84,11 +85,13 @@ function load({ initial = 1.8, withVideo = true, storedSpeed = 1.8, deferSetting
   const descriptionCollapseButton = {
     click() { descriptionClicks++; descriptionOpen = false },
   }
-  const descriptionExpander = {
+  const makeDescriptionExpander = () => Object.assign(eventTarget(), {
+    isConnected: true,
     querySelector: selector => selector === 'tp-yt-paper-button#expand:not([hidden]), button[aria-label="Show more"]:not([hidden])' && !descriptionOpen
       ? descriptionButton
       : selector === 'tp-yt-paper-button#collapse:not([hidden]), button[aria-label="Show less"]:not([hidden])' && descriptionOpen ? descriptionCollapseButton : null,
-  }
+  })
+  let descriptionExpander = makeDescriptionExpander()
   const summaryTrigger = aiSummaryButton ? {
     click() { summaryClicks++; summaryAttrs.add('is-expanded') },
   } : null
@@ -218,6 +221,13 @@ function load({ initial = 1.8, withVideo = true, storedSpeed = 1.8, deferSetting
       for (const fn of storageListeners) fn({ youtubeAiSummary: { newValue: value } }, 'sync')
     },
     setChannel(value, name = '', videoId = null) { channel = value; channelName = name; ownerVideoId = videoId },
+    replaceWatchPage({ videoId, descriptionExpanded = false }) {
+      ownerVideoId = videoId
+      descriptionExpander.isConnected = false
+      descriptionOpen = descriptionExpanded
+      descriptionExpander = makeDescriptionExpander()
+    },
+    interactWithDescription(type) { descriptionExpander.dispatchEvent({ type }) },
     navigate(path) {
       const url = new URL(path, location.href)
       location.href = url.href

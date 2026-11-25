@@ -656,34 +656,48 @@ const youtubeAiSummary = (() => {
   let enabled = false
   let timer
   let restoreTimer
-  let temporaryDescription = false
+  let descriptionProbe = null
+  let probedHref = ''
 
   const onWatchPage = () => VSC_RULES.isYouTube(location.hostname) && location.pathname === '/watch'
   const summaryTrigger = () => document.querySelector('#video-summary ytd-expandable-metadata-renderer')?.querySelector('#collapsed-title')
+  const watchMatchesVideo = () => {
+    const watchId = document.querySelector('ytd-watch-flexy')?.getAttribute?.('video-id')
+    return !watchId || watchId === new URL(location.href).searchParams.get('v')
+  }
 
-  const restoreDescription = () => {
+  const clearProbe = () => {
     clearTimeout(restoreTimer)
     restoreTimer = null
-    const restore = temporaryDescription
-    temporaryDescription = false
-    if (!restore || !onWatchPage()) return
-    document.querySelector('#description-inline-expander')
-      ?.querySelector('tp-yt-paper-button#collapse:not([hidden]), button[aria-label="Show less"]:not([hidden])')?.click()
+    if (descriptionProbe) {
+      const { expander, onInput } = descriptionProbe
+      expander.removeEventListener?.('pointerdown', onInput, true)
+      expander.removeEventListener?.('keydown', onInput, true)
+    }
+    descriptionProbe = null
+  }
+
+  const discardStaleProbe = () => {
+    if (descriptionProbe && (descriptionProbe.href !== location.href || !descriptionProbe.expander.isConnected)) clearProbe()
+  }
+
+  const restoreDescription = () => {
+    const probe = descriptionProbe
+    clearProbe()
+    if (!probe || !onWatchPage() || probe.href !== location.href || !probe.expander.isConnected || !watchMatchesVideo()) return
+    probe.expander.querySelector('tp-yt-paper-button#collapse:not([hidden]), button[aria-label="Show less"]:not([hidden])')?.click()
   }
 
   const ensure = () => {
     timer = null
+    discardStaleProbe()
     if (!enabled || !onWatchPage()) return restoreDescription()
+    if (!watchMatchesVideo()) return
     const summary = document.querySelector('#video-summary ytd-expandable-metadata-renderer')
     const trigger = summary?.querySelector('#collapsed-title')
     if (trigger) {
-      clearTimeout(restoreTimer)
-      restoreTimer = null
-      temporaryDescription = false
+      if (descriptionProbe?.href === location.href) clearProbe()
       if (summary.hasAttribute('is-expanded')) return
-      const watch = document.querySelector('ytd-watch-flexy')
-      const videoId = new URL(location.href).searchParams.get('v')
-      if (watch?.getAttribute?.('video-id') && watch.getAttribute('video-id') !== videoId) return
       const descriptionButton = document.querySelector('#description-inline-expander')
         ?.querySelector('tp-yt-paper-button#expand:not([hidden]), button[aria-label="Show more"]:not([hidden])')
       if (descriptionButton) {
@@ -695,22 +709,29 @@ const youtubeAiSummary = (() => {
       return
     }
     if (summary) return
-    const descriptionButton = document.querySelector('#description-inline-expander')
+    const expander = document.querySelector('#description-inline-expander')
+    const descriptionButton = expander
       ?.querySelector('tp-yt-paper-button#expand:not([hidden]), button[aria-label="Show more"]:not([hidden])')
-    if (!descriptionButton || temporaryDescription) return
-    temporaryDescription = true
+    if (!descriptionButton || descriptionProbe || probedHref === location.href) return
+    const onInput = () => clearProbe()
+    descriptionProbe = { href: location.href, expander, onInput }
+    expander.addEventListener('pointerdown', onInput, true)
+    expander.addEventListener('keydown', onInput, true)
+    probedHref = location.href
     descriptionButton.click()
     // YouTube erzeugt die Zusammenfassung erst im ausgeklappten Beschreibungsbereich.
     restoreTimer = setTimeout(() => {
       restoreTimer = null
-      if (summaryTrigger()) return
+      discardStaleProbe()
+      if (!descriptionProbe || descriptionProbe.href !== location.href) return
+      if (summaryTrigger()) return clearProbe()
       restoreDescription()
     }, RESTORE_DELAY_MS)
   }
 
   const schedule = () => {
     if (!enabled || !onWatchPage()) return restoreDescription()
-    clearTimeout(timer)
+    if (timer != null) return
     timer = setTimeout(ensure, DEBOUNCE_MS)
   }
 
