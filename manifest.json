@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Video Speed Control with Keyboard",
-  "version": "2026.11.9",
-  "description": "Videotempo pro Kanal und YouTube Kids vorgeben. YouTube immer in seiner nativen Dunkelansicht nutzen.",
+  "version": "2026.11.10",
+  "description": "Videotempo pro Kanal und YouTube Kids vorgeben. YouTube immer dunkel nutzen; native KI-Zusammenfassung optional öffnen.",
   "author": "Vitus Schuhwerk",
   "license": "MIT",
   "permissions": ["storage"],

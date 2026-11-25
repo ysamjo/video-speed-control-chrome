@@ -648,4 +648,102 @@ const cinemaMode = (() => {
 })()
 
 cinemaMode.init()
+
+const youtubeAiSummary = (() => {
+  const SUMMARY_KEY = 'youtubeAiSummary'
+  const DEBOUNCE_MS = 250
+  const RESTORE_DELAY_MS = 1200
+  let enabled = false
+  let timer
+  let restoreTimer
+  let temporaryDescription = false
+
+  const onWatchPage = () => VSC_RULES.isYouTube(location.hostname) && location.pathname === '/watch'
+  const summaryTrigger = () => document.querySelector('#video-summary ytd-expandable-metadata-renderer')?.querySelector('#collapsed-title')
+
+  const restoreDescription = () => {
+    clearTimeout(restoreTimer)
+    restoreTimer = null
+    const restore = temporaryDescription
+    temporaryDescription = false
+    if (!restore || !onWatchPage()) return
+    document.querySelector('#description-inline-expander')
+      ?.querySelector('tp-yt-paper-button#collapse:not([hidden]), button[aria-label="Show less"]:not([hidden])')?.click()
+  }
+
+  const ensure = () => {
+    timer = null
+    if (!enabled || !onWatchPage()) return restoreDescription()
+    const summary = document.querySelector('#video-summary ytd-expandable-metadata-renderer')
+    const trigger = summary?.querySelector('#collapsed-title')
+    if (trigger) {
+      clearTimeout(restoreTimer)
+      restoreTimer = null
+      temporaryDescription = false
+      if (summary.hasAttribute('is-expanded')) return
+      const watch = document.querySelector('ytd-watch-flexy')
+      const videoId = new URL(location.href).searchParams.get('v')
+      if (watch?.getAttribute?.('video-id') && watch.getAttribute('video-id') !== videoId) return
+      const descriptionButton = document.querySelector('#description-inline-expander')
+        ?.querySelector('tp-yt-paper-button#expand:not([hidden]), button[aria-label="Show more"]:not([hidden])')
+      if (descriptionButton) {
+        descriptionButton.click()
+        schedule()
+        return
+      }
+      trigger.click()
+      return
+    }
+    if (summary) return
+    const descriptionButton = document.querySelector('#description-inline-expander')
+      ?.querySelector('tp-yt-paper-button#expand:not([hidden]), button[aria-label="Show more"]:not([hidden])')
+    if (!descriptionButton || temporaryDescription) return
+    temporaryDescription = true
+    descriptionButton.click()
+    // YouTube erzeugt die Zusammenfassung erst im ausgeklappten Beschreibungsbereich.
+    restoreTimer = setTimeout(() => {
+      restoreTimer = null
+      if (summaryTrigger()) return
+      restoreDescription()
+    }, RESTORE_DELAY_MS)
+  }
+
+  const schedule = () => {
+    if (!enabled || !onWatchPage()) return restoreDescription()
+    clearTimeout(timer)
+    timer = setTimeout(ensure, DEBOUNCE_MS)
+  }
+
+  const init = () => {
+    if (!VSC_RULES.isYouTube(location.hostname)) return
+    try {
+      chrome.storage.sync.get({ [SUMMARY_KEY]: false }, (res) => {
+        if (chrome.runtime.lastError) return log('KI-Zusammenfassung: Einstellung nicht lesbar', chrome.runtime.lastError)
+        enabled = res[SUMMARY_KEY] === true
+        schedule()
+      })
+      chrome.storage.onChanged.addListener((changes, area) => {
+        if (area !== 'sync' || changes[SUMMARY_KEY] == null) return
+        enabled = changes[SUMMARY_KEY].newValue === true
+        if (enabled) schedule()
+        else restoreDescription()
+      })
+    } catch (e) {
+      log('Kein Zugriff auf chrome.storage – KI-Zusammenfassung bleibt deaktiviert', e)
+    }
+    document.addEventListener('yt-navigate-finish', schedule, true)
+    const startObserver = () => {
+      if (typeof MutationObserver !== 'function' || !document.documentElement) return
+      new MutationObserver(schedule).observe(document.documentElement, {
+        subtree: true, childList: true, attributes: true, attributeFilter: ['is-expanded', 'video-id'],
+      })
+    }
+    if (document.documentElement) startObserver()
+    else document.addEventListener('DOMContentLoaded', startObserver, { once: true })
+  }
+
+  return { init }
+})()
+
+youtubeAiSummary.init()
 })()

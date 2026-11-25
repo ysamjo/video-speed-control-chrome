@@ -5,6 +5,7 @@ const DEFAULTS = {
   playbackSpeed: 1.8,
   channelSpeeds: DEFAULT_CHANNEL_RULES,
   youtubeKidsNormalSpeed: true,
+  youtubeAiSummary: false,
   cinemaMode: true,
   watchLaterCleanup: true,
 }
@@ -64,6 +65,7 @@ const render = settings => {
   for (const id of FIELDS) $(id).value = settings.hotkeys?.[id] || DEFAULTS.hotkeys[id]
   $('speed').value = validSpeed(settings.playbackSpeed) ?? DEFAULTS.playbackSpeed
   $('kids').checked = settings.youtubeKidsNormalSpeed !== false
+  $('ai-summary').checked = settings.youtubeAiSummary === true
   $('cinema').checked = settings.cinemaMode !== false
   $('watch-later').checked = settings.watchLaterCleanup !== false
   $('channels').replaceChildren()
@@ -116,7 +118,7 @@ const save = async event => {
     for (const rule of rules) {
       if (rule.type === 'channel' && !rule.aliases.length) rule.aliases = await resolveAliases(rule.pattern)
     }
-    await chrome.storage.sync.set({ hotkeys, playbackSpeed: speed, channelSpeeds: rules, youtubeKidsNormalSpeed: $('kids').checked, cinemaMode: $('cinema').checked, watchLaterCleanup: $('watch-later').checked })
+    await chrome.storage.sync.set({ hotkeys, playbackSpeed: speed, channelSpeeds: rules, youtubeKidsNormalSpeed: $('kids').checked, youtubeAiSummary: $('ai-summary').checked, cinemaMode: $('cinema').checked, watchLaterCleanup: $('watch-later').checked })
     dirty = false
     // Nach erfolgreicher Auflösung Aliasse behalten, auch wenn die Seite offen bleibt.
     ;[...$('channels').children].forEach((row, index) => { row.savedPattern = rules[index].pattern; row.aliases = rules[index].aliases })
@@ -134,7 +136,7 @@ $('reset').addEventListener('click', async () => {
     await chrome.storage.sync.set(DEFAULTS)
     dirty = false
     render(DEFAULTS)
-    showStatus('Standard wiederhergestellt: sportstudio 1,0×, YouTube Kids 1,0×, sonst 1,8×; Kino-Modus und Später-ansehen-Aufräumer an.')
+    showStatus('Standard wiederhergestellt: sportstudio und YouTube Kids 1,0×, sonst 1,8×; KI-Zusammenfassung aus, Kino-Modus und Später-ansehen-Aufräumer an.')
   } catch (e) { showError(`Zurücksetzen fehlgeschlagen: ${e.message}`) }
 })
 const isYouTubeUrl = url => {

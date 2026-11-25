@@ -67,13 +67,38 @@ function load({ initial = 1.8, withVideo = true, storedSpeed = 1.8, deferSetting
   cinema = true, hostname = 'example.com', pathname = '/', theater = false,
   theaterButton = true, applyTheaterOnClick = true, channel = null, channelName = '',
   channelRules, kids = true, ownerVideoId = null, ancestorOrigins = [], collab = false, metadata, toasts = [], snackbars = [],
-  initialPref = '', initialDark = false, deferRoot = false } = {}) {
+  initialPref = '', initialDark = false, deferRoot = false, aiSummary = false, aiSummaryAvailable = true,
+  aiSummaryExpanded = false, descriptionExpanded = false, aiSummaryButton = true, aiSummaryAfterDescriptionExpand = false } = {}) {
   const winListeners = {}
   const created = [], saved = [], storageListeners = [], pendingGets = [], observers = [], messageListeners = []
-  const storage = { playbackSpeed: storedSpeed, cinemaMode: cinema, youtubeKidsNormalSpeed: kids }
+  const storage = { playbackSpeed: storedSpeed, cinemaMode: cinema, youtubeKidsNormalSpeed: kids, youtubeAiSummary: aiSummary }
   const requests = []
   if (channelRules !== undefined) storage.channelSpeeds = channelRules
   let fakeNow = 1000, theaterClicks = 0, pref = initialPref
+  let summaryAvailable = aiSummaryAvailable, descriptionOpen = descriptionExpanded
+  let descriptionClicks = 0, summaryClicks = 0
+  const summaryAttrs = new Set(aiSummaryExpanded ? ['is-expanded'] : [])
+  const descriptionButton = {
+    click() { descriptionClicks++; descriptionOpen = true; if (aiSummaryAfterDescriptionExpand) summaryAvailable = true },
+  }
+  const descriptionCollapseButton = {
+    click() { descriptionClicks++; descriptionOpen = false },
+  }
+  const descriptionExpander = {
+    querySelector: selector => selector === 'tp-yt-paper-button#expand:not([hidden]), button[aria-label="Show more"]:not([hidden])' && !descriptionOpen
+      ? descriptionButton
+      : selector === 'tp-yt-paper-button#collapse:not([hidden]), button[aria-label="Show less"]:not([hidden])' && descriptionOpen ? descriptionCollapseButton : null,
+  }
+  const summaryTrigger = aiSummaryButton ? {
+    click() { summaryClicks++; summaryAttrs.add('is-expanded') },
+  } : null
+  const summary = makeEl({
+    localName: 'ytd-expandable-metadata-renderer',
+    hasAttribute: name => summaryAttrs.has(name),
+    setAttribute: name => { summaryAttrs.add(name) },
+    removeAttribute: name => { summaryAttrs.delete(name) },
+    querySelector: selector => selector === '#collapsed-title' ? summaryTrigger : null,
+  })
   const video = makeVideo(initial)
   const root = makeEl({ localName: 'html' })
   if (initialDark) root.setAttribute('dark', '')
@@ -112,6 +137,8 @@ function load({ initial = 1.8, withVideo = true, storedSpeed = 1.8, deferSetting
       if (s === 'ytd-watch-flexy') return flexy
       if (s === 'ytd-watch-flexy #owner') return collab ? {} : null
       if (s === '.ytp-size-button') return sizeButton
+      if (s === '#description-inline-expander') return descriptionExpander
+      if (s === '#video-summary ytd-expandable-metadata-renderer') return summaryAvailable ? summary : null
       return null
     },
     querySelectorAll: selector => {
@@ -186,6 +213,10 @@ function load({ initial = 1.8, withVideo = true, storedSpeed = 1.8, deferSetting
       storage.youtubeKidsNormalSpeed = value
       for (const fn of storageListeners) fn({ youtubeKidsNormalSpeed: { newValue: value } }, 'sync')
     },
+    changeAiSummary(value) {
+      storage.youtubeAiSummary = value
+      for (const fn of storageListeners) fn({ youtubeAiSummary: { newValue: value } }, 'sync')
+    },
     setChannel(value, name = '', videoId = null) { channel = value; channelName = name; ownerVideoId = videoId },
     navigate(path) {
       const url = new URL(path, location.href)
@@ -210,6 +241,11 @@ function load({ initial = 1.8, withVideo = true, storedSpeed = 1.8, deferSetting
     theaterOn: () => theaterAttrs.has('theater'),
     setTheater: (on) => { if (on) theaterAttrs.add('theater'); else theaterAttrs.delete('theater') },
     theaterClicks: () => theaterClicks,
+    summaryExpanded: () => summaryAttrs.has('is-expanded'),
+    descriptionExpanded: () => descriptionOpen,
+    summaryClicks: () => summaryClicks,
+    descriptionClicks: () => descriptionClicks,
+    setAiSummaryAvailable(value) { summaryAvailable = value },
     mutate: () => { for (const o of [...observers]) o.cb([]) },
   }
 }
