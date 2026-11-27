@@ -8,6 +8,8 @@ const DEFAULTS = {
   youtubeAiSummary: false,
   cinemaMode: true,
   watchLaterCleanup: true,
+  playlistRuntime: true,
+  timestampButton: true,
 }
 const FIELDS = ['decrease', 'increase', 'toggle']
 const $ = id => document.getElementById(id)
@@ -68,6 +70,8 @@ const render = settings => {
   $('ai-summary').checked = settings.youtubeAiSummary === true
   $('cinema').checked = settings.cinemaMode !== false
   $('watch-later').checked = settings.watchLaterCleanup !== false
+  $('playlist-runtime').checked = settings.playlistRuntime !== false
+  $('timestamp-button').checked = settings.timestampButton !== false
   $('channels').replaceChildren()
   normalizeRules(settings.channelSpeeds).forEach(rule => addRule(rule))
 }
@@ -118,7 +122,7 @@ const save = async event => {
     for (const rule of rules) {
       if (rule.type === 'channel' && !rule.aliases.length) rule.aliases = await resolveAliases(rule.pattern)
     }
-    await chrome.storage.sync.set({ hotkeys, playbackSpeed: speed, channelSpeeds: rules, youtubeKidsNormalSpeed: $('kids').checked, youtubeAiSummary: $('ai-summary').checked, cinemaMode: $('cinema').checked, watchLaterCleanup: $('watch-later').checked })
+    await chrome.storage.sync.set({ hotkeys, playbackSpeed: speed, channelSpeeds: rules, youtubeKidsNormalSpeed: $('kids').checked, youtubeAiSummary: $('ai-summary').checked, cinemaMode: $('cinema').checked, watchLaterCleanup: $('watch-later').checked, playlistRuntime: $('playlist-runtime').checked, timestampButton: $('timestamp-button').checked })
     dirty = false
     // Nach erfolgreicher Auflösung Aliasse behalten, auch wenn die Seite offen bleibt.
     ;[...$('channels').children].forEach((row, index) => { row.savedPattern = rules[index].pattern; row.aliases = rules[index].aliases })

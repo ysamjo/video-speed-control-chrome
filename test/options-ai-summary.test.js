@@ -23,7 +23,7 @@ function makeElement(id = '') {
 }
 
 function loadOptions(stored = {}) {
-  const ids = ['error', 'status', 'settings-fields', 'decrease', 'increase', 'toggle', 'speed', 'kids', 'cinema', 'watch-later', 'ai-summary', 'channels', 'settings', 'add-channel', 'reset', 'diagnose', 'diagnose-result']
+  const ids = ['error', 'status', 'settings-fields', 'decrease', 'increase', 'toggle', 'speed', 'kids', 'cinema', 'watch-later', 'ai-summary', 'playlist-runtime', 'timestamp-button', 'channels', 'settings', 'add-channel', 'reset', 'diagnose', 'diagnose-result']
   const elements = Object.fromEntries(ids.map(id => [id, makeElement(id)]))
   const data = { channelSpeeds: [], ...stored }
   const saved = []
@@ -74,7 +74,8 @@ async function run() {
     elements['ai-summary'].checked = true
     elements.settings.dispatch('submit')
     await tick(0)
-    s.check('Speichern übernimmt die aktivierte KI-Zusammenfassung', saved.at(-1)?.youtubeAiSummary, true)
+    const stored = Object.assign({}, ...saved)
+    s.check('Speichern übernimmt die aktivierte KI-Zusammenfassung', stored.youtubeAiSummary, true)
   }
 
   {
@@ -82,7 +83,8 @@ async function run() {
     await tick(0)
     elements.settings.dispatch('submit')
     await tick(0)
-    s.check('Speichern schreibt die standardmäßig deaktivierte Option', saved.at(-1)?.youtubeAiSummary, false)
+    const stored = Object.assign({}, ...saved)
+    s.check('Speichern schreibt die standardmäßig deaktivierte Option', stored.youtubeAiSummary, false)
   }
 
   {
