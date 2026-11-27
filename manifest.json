@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Video Speed Control with Keyboard",
-  "version": "2026.11.10",
+  "version": "2026.11.11",
   "description": "Videotempo pro Kanal und YouTube Kids vorgeben. YouTube immer dunkel nutzen; native KI-Zusammenfassung optional öffnen.",
   "author": "Vitus Schuhwerk",
   "license": "MIT",
@@ -39,7 +39,7 @@
     },
     {
       "matches": ["<all_urls>"],
-      "js": ["rules.js", "content.js", "watch-later.js"],
+      "js": ["rules.js", "content.js", "watch-later.js", "playlist-tools.js"],
       "run_at": "document_start",
       "all_frames": true,
       "match_about_blank": true
